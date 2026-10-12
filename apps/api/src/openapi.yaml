@@ -1,0 +1,92 @@
+openapi: 3.0.3
+info:
+  title: CAHS API
+  version: 0.1.0
+  description: |
+    Centralized Agro Hub prototype API. All payments, loans and savings are simulated.
+    Concept proposal. Subject to validation, approvals and partnership agreements.
+servers:
+  - url: http://localhost:4000
+tags:
+  - name: auth
+  - name: users
+  - name: listings
+  - name: orders
+  - name: storage
+  - name: logistics
+  - name: shipments
+  - name: payments
+  - name: settlements
+  - name: disputes
+  - name: loans
+  - name: savings
+  - name: rewards
+  - name: AI
+  - name: notifications
+  - name: admin
+  - name: analytics
+paths:
+  /api/health:
+    get:
+      summary: Health
+      responses:
+        "200":
+          description: OK
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+                otp: { type: string }
+      responses:
+        "200":
+          description: Tokens
+  /api/listings:
+    get:
+      tags: [listings]
+      summary: Browse listings
+      responses:
+        "200":
+          description: List
+    post:
+      tags: [listings]
+      summary: Create listing (farmer)
+      responses:
+        "201":
+          description: Created
+  /api/orders:
+    post:
+      tags: [orders]
+      summary: Place order (trader)
+      responses:
+        "201":
+          description: Created
+  /api/payments/checkout:
+    post:
+      tags: [payments]
+      summary: Simulated checkout
+      responses:
+        "200":
+          description: Sandbox redirect
+  /api/loans/applications:
+    post:
+      tags: [loans]
+      summary: Submit loan application
+      responses:
+        "201":
+          description: Submitted
+  /api/admin/analytics:
+    get:
+      tags: [analytics]
+      summary: Pilot analytics
+      responses:
+        "200":
+          description: Metrics

@@ -1,0 +1,627 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  FARMER
+  TRADER
+  STORAGE_PROVIDER
+  LOGISTICS_PROVIDER
+  BANK_OFFICER
+  PLATFORM_ADMIN
+}
+
+model User {
+  id                       String    @id @default(uuid())
+  email                    String    @unique
+  phone                    String    @unique
+  passwordHash             String
+  role                     Role
+  fullName                 String
+  state                    String
+  lga                      String
+  isEligibleZenithCustomer Boolean   @default(false)
+  zenithLinkedAt           DateTime?
+  isDemo                   Boolean   @default(true)
+  deletedAt                DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  profile                 Profile?
+  consents                Consent[]
+  bankLinks               BankLink[]
+  businesses              Business[]
+  listings                Listing[]
+  ordersPlaced            Order[]                 @relation("BuyerOrders")
+  ordersSold              Order[]                 @relation("SellerOrders")
+  storageFacilities       StorageFacility[]
+  storageBookings         StorageBooking[]
+  vehicles                Vehicle[]
+  drivers                 Driver[]
+  deliveryRequests        DeliveryRequest[]
+  quotes                  Quote[]
+  jobsAssigned            Job[]                   @relation("JobProvider")
+  payments                Payment[]
+  disputes                Dispute[]
+  loanApplications        LoanApplication[]
+  loanDecisions           LoanDecision[]
+  savingsAccounts         SavingsAccount[]
+  loyaltyEntries          LoyaltyLedger[]
+  notifications           Notification[]
+  auditEvents             AuditEvent[]            @relation("AuditActor")
+  dataCorrectionRequests  DataCorrectionRequest[]
+  refreshTokens           RefreshToken[]
+  aiInteractions          AiInteraction[]
+  verificationReviews     VerificationSubmission[] @relation("VerificationReviewer")
+}
+
+model Profile {
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  user         User    @relation(fields: [userId], references: [id])
+  farmSizeHa   Float?
+  crops        String?
+  businessName String?
+  bio          String?
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Consent {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  key         String
+  granted     Boolean
+  grantedAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([userId, key])
+}
+
+model BankLink {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+  bankName           String
+  maskedAccount      String
+  accountEncrypted   String
+  verifiedAt         DateTime @default(now())
+  isZenith           Boolean
+}
+
+model Business {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  cacNumber String?
+  address   String
+  contact   String
+  kind      String
+  createdAt DateTime @default(now())
+
+  verifications VerificationSubmission[]
+  facilities    StorageFacility[]
+}
+
+model VerificationSubmission {
+  id           String    @id @default(uuid())
+  businessId   String
+  business     Business  @relation(fields: [businessId], references: [id])
+  status       String    @default("draft")
+  reviewerId   String?
+  reviewer     User?     @relation("VerificationReviewer", fields: [reviewerId], references: [id])
+  decisionNote String?
+  decidedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  documents    Document[]
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  filename    String
+  mimeType    String
+  path        String
+  purpose     String
+  uploadedBy  String
+  createdAt   DateTime  @default(now())
+  verificationId String?
+  verification   VerificationSubmission? @relation(fields: [verificationId], references: [id])
+  loanApplicationId String?
+  loanApplication   LoanApplication? @relation(fields: [loanApplicationId], references: [id])
+  disputeId   String?
+  dispute     Dispute?  @relation(fields: [disputeId], references: [id])
+  podId       String?
+  proof       ProofOfDelivery? @relation(fields: [podId], references: [id])
+}
+
+model Listing {
+  id               String   @id @default(uuid())
+  farmerId         String
+  farmer           User     @relation(fields: [farmerId], references: [id])
+  produceType      String
+  quantity         Float
+  reservedQty      Float    @default(0)
+  unit             String
+  pricePerUnit     Float
+  grade            String
+  state            String
+  lga              String
+  availableFrom    DateTime
+  availableTo      DateTime
+  harvestDate      DateTime?
+  harvestNotes     String?
+  status           String   @default("draft")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  images           ListingImage[]
+  orderItems       OrderItem[]
+
+  @@index([produceType, state, status, grade])
+}
+
+model ListingImage {
+  id        String  @id @default(uuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id])
+  path      String
+  alt       String
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  buyerId         String
+  buyer           User     @relation("BuyerOrders", fields: [buyerId], references: [id])
+  sellerId        String
+  seller          User     @relation("SellerOrders", fields: [sellerId], references: [id])
+  status          String   @default("placed")
+  deliveryMode    String
+  subtotal        Float
+  platformFee     Float
+  zenithDiscount  Float    @default(0)
+  discountFunder  String?
+  logisticsCharge Float    @default(0)
+  totalDue        Float
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  items           OrderItem[]
+  payments        Payment[]
+  deliveryRequests DeliveryRequest[]
+  disputes        Dispute[]
+  rating          Int?
+  ratingComment   String?
+
+  @@index([status])
+}
+
+model OrderItem {
+  id         String  @id @default(uuid())
+  orderId    String
+  order      Order   @relation(fields: [orderId], references: [id])
+  listingId  String
+  listing    Listing @relation(fields: [listingId], references: [id])
+  quantity   Float
+  unitPrice  Float
+}
+
+model StorageFacility {
+  id               String   @id @default(uuid())
+  ownerId          String
+  owner            User     @relation(fields: [ownerId], references: [id])
+  businessId       String?
+  business         Business? @relation(fields: [businessId], references: [id])
+  name             String
+  state            String
+  lga              String
+  storageType      String
+  capacity         Float
+  available        Float
+  unit             String
+  pricePerUnitPeriod Float
+  periodLabel      String   @default("week")
+  createdAt        DateTime @default(now())
+  bookings         StorageBooking[]
+}
+
+model StorageBooking {
+  id          String   @id @default(uuid())
+  facilityId  String
+  facility    StorageFacility @relation(fields: [facilityId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  produceType String
+  quantity    Float
+  startDate   DateTime
+  durationDays Int
+  status      String   @default("requested")
+  charge      Float
+  zenithDiscount Float @default(0)
+  discountFunder String?
+  createdAt   DateTime @default(now())
+  movements   StockMovement[]
+}
+
+model StockMovement {
+  id         String   @id @default(uuid())
+  bookingId  String
+  booking    StorageBooking @relation(fields: [bookingId], references: [id])
+  kind       String
+  quantity   Float
+  condition  String?
+  destination String?
+  orderRef   String?
+  note       String?
+  createdAt  DateTime @default(now())
+}
+
+model Vehicle {
+  id           String   @id @default(uuid())
+  providerId   String
+  provider     User     @relation(fields: [providerId], references: [id])
+  plateNumber  String
+  description  String
+  jobs         Job[]
+}
+
+model Driver {
+  id         String  @id @default(uuid())
+  providerId String
+  provider   User    @relation(fields: [providerId], references: [id])
+  name       String
+  contact    String
+  jobs       Job[]
+}
+
+model DeliveryRequest {
+  id           String   @id @default(uuid())
+  orderId      String?
+  order        Order?   @relation(fields: [orderId], references: [id])
+  requesterId  String
+  requester    User     @relation(fields: [requesterId], references: [id])
+  origin       String
+  destination  String
+  loadDesc     String
+  weightKg     Float
+  serviceLevel String
+  pickupWindow String
+  status       String   @default("open")
+  createdAt    DateTime @default(now())
+  quotes       Quote[]
+  jobs         Job[]
+}
+
+model Quote {
+  id              String   @id @default(uuid())
+  requestId       String
+  request         DeliveryRequest @relation(fields: [requestId], references: [id])
+  providerId      String
+  provider        User     @relation(fields: [providerId], references: [id])
+  baseCharge      Float
+  discountAmount  Float    @default(0)
+  customerPays    Float
+  discountFunder  String?
+  conditions      String
+  status          String   @default("offered")
+  createdAt       DateTime @default(now())
+  jobs            Job[]
+}
+
+model Job {
+  id           String   @id @default(uuid())
+  requestId    String
+  request      DeliveryRequest @relation(fields: [requestId], references: [id])
+  quoteId      String
+  quote        Quote    @relation(fields: [quoteId], references: [id])
+  providerId   String
+  provider     User     @relation("JobProvider", fields: [providerId], references: [id])
+  driverId     String?
+  driver       Driver?  @relation(fields: [driverId], references: [id])
+  vehicleId    String?
+  vehicle      Vehicle? @relation(fields: [vehicleId], references: [id])
+  status       String   @default("assigned")
+  etaWindow    String?
+  mockLat      Float?
+  mockLng      Float?
+  createdAt    DateTime @default(now())
+  milestones   ShipmentMilestone[]
+  pods         ProofOfDelivery[]
+}
+
+model ShipmentMilestone {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id])
+  code      String
+  note      String?
+  location  String?
+  actorId   String
+  createdAt DateTime @default(now())
+}
+
+model ProofOfDelivery {
+  id        String     @id @default(uuid())
+  jobId     String
+  job       Job        @relation(fields: [jobId], references: [id])
+  code      String
+  confirmed Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  documents Document[]
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String?
+  order         Order?   @relation(fields: [orderId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  amount        Float
+  status        String   @default("pending")
+  providerRef   String   @unique
+  method        String
+  createdAt     DateTime @default(now())
+  events        PaymentEvent[]
+  settlement    Settlement?
+  refunds       Refund[]
+}
+
+model PaymentEvent {
+  id        String   @id @default(uuid())
+  paymentId String
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  status    String
+  payload   String
+  createdAt DateTime @default(now())
+}
+
+model Settlement {
+  id             String   @id @default(uuid())
+  paymentId      String   @unique
+  payment        Payment  @relation(fields: [paymentId], references: [id])
+  grossAmount    Float
+  fees           Float
+  discounts      Float
+  discountFunder String?
+  netToSeller    Float
+  status         String   @default("held")
+  settledAt      DateTime?
+}
+
+model Refund {
+  id        String   @id @default(uuid())
+  paymentId String
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  amount    Float
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model Dispute {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  raisedById String
+  raisedBy  User     @relation(fields: [raisedById], references: [id])
+  reason    String
+  status    String   @default("open")
+  resolution String?
+  createdAt DateTime @default(now())
+  documents Document[]
+}
+
+model FeeRule {
+  id                         String  @id @default(uuid())
+  name                       String
+  active                     Boolean @default(true)
+  nonZenithPercent           Float
+  zenithPercent              Float
+  discountFunder             String
+  appliesToEligibleZenithOnly Boolean @default(true)
+}
+
+model DiscountRule {
+  id             String  @id @default(uuid())
+  kind           String
+  active         Boolean @default(true)
+  percentOff     Float   @default(0)
+  fixedOff       Float   @default(0)
+  discountFunder String
+}
+
+model LoyaltyLedger {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  points    Int
+  reason    String
+  createdAt DateTime @default(now())
+}
+
+model LoanProduct {
+  id          String @id @default(uuid())
+  name        String
+  minAmount   Float
+  maxAmount   Float
+  tenorsDays  String
+  active      Boolean @default(true)
+  applications LoanApplication[]
+}
+
+model LoanApplication {
+  id              String   @id @default(uuid())
+  applicantId     String
+  applicant       User     @relation(fields: [applicantId], references: [id])
+  productId       String?
+  product         LoanProduct? @relation(fields: [productId], references: [id])
+  status          String   @default("draft")
+  amount          Float
+  purpose         String
+  tenorDays       Int
+  farmInfo        String
+  crops           String
+  landSizeHa      Float
+  historicalSales String
+  bankMasked      String
+  attachSummaries Boolean  @default(false)
+  consentSnapshot String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  documents       Document[]
+  decisions       LoanDecision[]
+  schedule        RepaymentSchedule[]
+  repayments      Repayment[]
+  internalNotes   String?
+}
+
+model LoanDecision {
+  id             String   @id @default(uuid())
+  applicationId  String
+  application    LoanApplication @relation(fields: [applicationId], references: [id])
+  officerId      String
+  officer        User     @relation(fields: [officerId], references: [id])
+  status         String
+  reason         String
+  counterAmount  Float?
+  createdAt      DateTime @default(now())
+}
+
+model RepaymentSchedule {
+  id             String   @id @default(uuid())
+  applicationId  String
+  application    LoanApplication @relation(fields: [applicationId], references: [id])
+  dueDate        DateTime
+  amount         Float
+  status         String   @default("upcoming")
+}
+
+model Repayment {
+  id             String   @id @default(uuid())
+  applicationId  String
+  application    LoanApplication @relation(fields: [applicationId], references: [id])
+  amount         Float
+  paidAt         DateTime @default(now())
+  simulated      Boolean  @default(true)
+}
+
+model SavingsProduct {
+  id                    String  @id @default(uuid())
+  name                  String
+  tenorDays             Int
+  zenithRatePercent     Float
+  nonZenithRatePercent  Float
+  earlyWithdrawalNote   String
+  active                Boolean @default(true)
+  accounts              SavingsAccount[]
+}
+
+model SavingsAccount {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  productId   String
+  product     SavingsProduct @relation(fields: [productId], references: [id])
+  principal   Float
+  status      String   @default("active")
+  startedAt   DateTime @default(now())
+  maturesAt   DateTime
+  projected   Float
+  acknowledged Boolean
+}
+
+model PriceHistory {
+  id          String   @id @default(uuid())
+  produceType String
+  state       String
+  month       DateTime
+  avgPrice    Float
+  volume      Float
+  synthetic   Boolean  @default(true)
+}
+
+model AiInteraction {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  prompt    String
+  output    String
+  flagged   Boolean  @default(false)
+  feedback  String?
+  createdAt DateTime @default(now())
+}
+
+model AiFlag {
+  id             String   @id @default(uuid())
+  interactionId  String
+  reason         String
+  createdAt      DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation("AuditActor", fields: [actorId], references: [id])
+  action     String
+  entity     String
+  entityId   String
+  beforeJson String?
+  afterJson  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model FeatureFlag {
+  id      String  @id @default(uuid())
+  key     String  @unique
+  enabled Boolean
+  note    String?
+}
+
+model DataCorrectionRequest {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  description String
+  status      String   @default("open")
+  createdAt   DateTime @default(now())
+}
+
+model PilotMetricSnapshot {
+  id        String   @id @default(uuid())
+  month     DateTime
+  payload   String
+  demo      Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+model ConfigKV {
+  key   String @id
+  value String
+}

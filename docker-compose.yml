@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cahs
+      POSTGRES_PASSWORD: cahs
+      POSTGRES_DB: cahs
+    ports:
+      - "5432:5432"
+    volumes:
+      - cahs_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cahs -d cahs"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      WEB_ORIGIN: http://localhost:5173
+      DATABASE_URL: postgresql://cahs:cahs@db:5432/cahs?schema=public
+      JWT_ACCESS_SECRET: docker-dev-access-secret-min-32-chars
+      JWT_REFRESH_SECRET: docker-dev-refresh-secret-min-32-chars
+      FIELD_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      UPLOAD_DIR: /app/uploads
+      TZ: Africa/Lagos
+    ports:
+      - "4000:4000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - cahs_uploads:/app/uploads
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4000
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  cahs_pg:
+  cahs_uploads:

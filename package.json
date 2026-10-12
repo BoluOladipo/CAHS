@@ -1,0 +1,25 @@
+{
+  "name": "cahs",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Centralized Agro Hub — hackathon prototype (simulated finance)",
+  "workspaces": [
+    "apps/api",
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev -w @cahs/api",
+    "dev:web": "npm run dev -w @cahs/web",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "db:generate": "npm run prisma:generate -w @cahs/api",
+    "db:migrate": "npm run prisma:migrate -w @cahs/api",
+    "db:seed": "npm run prisma:seed -w @cahs/api",
+    "db:reset": "npm run prisma:reset -w @cahs/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
