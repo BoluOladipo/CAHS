@@ -3,7 +3,7 @@
   "services": {
     "api": {
       "root": "apps/api",
-      "framework": "express"
+      "entrypoint": "index.js"
     },
     "web": {
       "root": "apps/web",
