@@ -1,8 +1,47 @@
 # Centralized Agro Hub (CAHS)
 
-> **Hackathon Pitch Prototype & Concept Proposal**  
-> **Proposed Partner:** Zenith Bank  
-> **Currency:** Nigerian Naira (₦) | **Primary Market:** Nigeria
+[![Zenith Bank Zecathon 6.0](https://img.shields.io/badge/Zenith%20Bank-Zecathon%206.0%20Entry-red?style=for-the-badge)](https://github.com/BoluOladipo/CAHS)
+[![Track: Smart SME Financing](https://img.shields.io/badge/Track-Smart%20SME%20Financing%20%26%20Growth-green?style=for-the-badge)](https://github.com/BoluOladipo/CAHS)
+[![Tests Passing](https://img.shields.io/badge/Tests-28%20Passed%20(100%25)-success?style=for-the-badge)](https://github.com/BoluOladipo/CAHS)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge)](https://github.com/BoluOladipo/CAHS)
+
+> **Category:** Agricultural Technology · Digital Finance · Artificial Intelligence · Supply Chain Management  
+> **Proposed Partner:** Zenith Bank Plc  
+> **Primary Currency:** Nigerian Naira (₦) | **Primary Target Market:** Nigeria
+
+---
+
+## Executive Summary
+
+**Centralized Agro Hub (CAHS)** is a connected digital agricultural ecosystem that brings produce trade, cold-room and dry storage booking, verified logistics haulage, payments, and responsible bank-controlled SME financing onto one coordinated platform.
+
+It connects **farmers**, **buyers/traders**, **storage facility operators**, **CAC-verified logistics companies**, and **participating financial institutions** (proposed partner: **Zenith Bank**). By organizing these activities in a single hub, CAHS reduces supply-chain fragmentation, improves transaction visibility, cuts post-harvest food spoilage, and provides structured data so banks can lend responsibly to agribusinesses with minimal credit history.
+
+```
+[Farmers] ──► [CAHS Marketplace] ──► [Buyers / Traders] ──► [Protected Payments] ──► [Storage & Logistics] ──► [Delivery]
+                                             ▲
+                                             │ (Consent-Gated Financials & Underwriting)
+                                             ▼
+                             [Zenith Bank Portal / Credit Queue]
+```
+
+### Three Signature AI & Trust Capabilities (Zecathon 6.0 Alignment)
+1. **AI Support Assistant & Urgency Triage**: Two-stage customer resolution. Stage 1 guides users through self-service with system records checks (never asking for PIN/OTP/password); Stage 2 automatically scores and routes unresolved cases to Zenith Bank ranked by urgency (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
+2. **Pending-State Payment Protection Engine**: If a network delay or incomplete transfer occurs, the payment enters a protected pending state with automatic exponential retries using the identical reference. Customers see a single unified transaction (no duplicate charges), and funds holds auto-release on timeout.
+3. **Business Financial Insights**: Consolidates recorded money-in and money-out into monthly revenue breakdowns, loss tracking, and an explainable AI growth plan. Customers can opt-in to share this verified ledger directly with Zenith Bank to pre-qualify for seasonal agricultural loans.
+
+---
+
+## Zecathon 6.0 Judging Criteria Alignment
+
+| Zecathon Requirement | Judging Criterion | How CAHS Addresses It | Where in Code / UI |
+| :--- | :--- | :--- | :--- |
+| **Problem & Opportunity** | **Impact** | Solves post-harvest losses, scattered agricultural records, and lack of SME credit data. | [docs/ASSUMPTIONS.md](file:///C:/Users/Black/Double%20X/CAHS/docs/ASSUMPTIONS.md) |
+| **Innovative AI / Emerging Tech** | **Innovation & Creativity** | Price & demand forecasting, spoilage advisory, pending-payment retry engine, AI complaint triage. | [services/ai.ts](file:///C:/Users/Black/Double%20X/CAHS/apps/api/src/services/ai.ts), `/app/support` |
+| **Impact & Value** | **Impact** | Customer acquisition for Zenith Bank, fee income, lower servicing costs, responsible agri-lending. | `/app/admin/analytics`, `/partnership` |
+| **Target Users & Feasibility** | **Feasibility** | 6 distinct roles (Farmer, Trader, Storage, Logistics, Bank Officer, Admin) with complete workflows. | `/app`, [pages-app.tsx](file:///C:/Users/Black/Double%20X/CAHS/apps/web/src/pages-app.tsx) |
+| **Growth Beyond Pilot** | **Scalability** | Reusable banking retry engine, crop & state expandability, modular REST/OpenAPI architecture. | [docs/INTEGRATION_PLAN.md](file:///C:/Users/Black/Double%20X/CAHS/docs/INTEGRATION_PLAN.md) |
+| **Team & Expertise** | **Feasibility** | 4-member multidisciplinary team (Project Lead, AI/Business, Data Analyst, QA/Testing). | `/team`, [README.md](file:///C:/Users/Black/Double%20X/CAHS/README.md#6-team-and-expertise) |
 
 ---
 
@@ -37,7 +76,8 @@ CAHS/
 │   ├── ASSUMPTIONS.md              # Architectural decisions & simulation assumptions
 │   ├── PRIVACY_AND_COMPLIANCE.md   # NDPA principles, RBAC & security design
 │   ├── INTEGRATION_PLAN.md         # Phase 3 integration blueprint
-│   └── DEMO_SCRIPT.md              # 5-7 minute pitch walkthrough script
+│   ├── DEMO_SCRIPT.md              # 5-10 minute pitch walkthrough script
+│   └── ZECATHON_PROPOSAL.txt       # Official Zecathon 6.0 proposal specification
 ├── docker-compose.yml   # Multi-container startup (Postgres, API, Web)
 └── start-cahs.bat       # One-click Windows development launcher
 ```
@@ -153,4 +193,24 @@ Tests cover 28 assertions:
 - **Zecathon 6.0 Financial Insights**: Net balance reconciliation (₦2.4m - ₦1.65m - ₦120k = ₦630k) and consent-gated bank sharing.
 - **Core Business Rules**: Platform fee math, logistics discount, loan decision authority, milestone sequences, driver privacy, savings disclosures, and capacity constraints.
 - **Prototype Honesty**: Verifies presence of prototype disclaimers and proposed partnership notices.
+
+---
+
+## 8. Interactive Demo Pages & Navigation
+
+When running locally (`npm run dev`):
+
+| Page / Feature | URL | Description |
+| :--- | :--- | :--- |
+| **Landing & Marketplace** | `http://localhost:5173/` | Overview of CAHS connected agricultural ecosystem. |
+| **Team & Expertise** | `http://localhost:5173/team` | Official 4-person multidisciplinary Zecathon team. |
+| **Zenith Concept Proposal** | `http://localhost:5173/partnership` | Strategic rationale, proposed benefits & pilot roadmap. |
+| **AI Support & Triage** | `http://localhost:5173/app/support` | Stage 1 self-service + Stage 2 urgency-ranked escalation. |
+| **Bank Complaint Queue** | `http://localhost:5173/app/bank/complaints` | Priority-ranked queue for Zenith Bank customer care officers. |
+| **Pending Payments Engine** | `http://localhost:5173/app/admin/payments-engine` | Automatic background retry ledger & timeout hold release. |
+| **Business Financial Insights** | `http://localhost:5173/app/insights` | Monthly revenue/expense breakdown, loss tracking & AI growth plan. |
+| **Bank Customer Underwriting** | `http://localhost:5173/app/bank/insights` | Consent-gated financial review for Zenith loan officers. |
+| **Swagger / OpenAPI Docs** | `http://localhost:4000/api/docs` | Interactive REST API documentation and schema explorer. |
+| **API Health Check** | `http://localhost:4000/api/health` | Live service health monitor. |
+
 
