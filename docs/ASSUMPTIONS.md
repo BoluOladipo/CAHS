@@ -69,3 +69,32 @@ The shipment workflow enforces the exact 6-state progression:
 - Uses deterministic statistical fallbacks when no external Anthropic API key is supplied.
 - All AI chat prompts and responses are logged to `ai_interactions`.
 - Prompts attempting to solicit loan approvals or return guarantees are intercepted with explicit policy guardrails.
+
+---
+
+## 7. Zenith Bank Zecathon 6.0 Team
+The platform is developed by a dedicated 4-member multidisciplinary team (within the Zecathon 2–4 member limit):
+- **Oladipo Boluwaduro Emmanuel** (Full-stack Developer / Project Manager): Leads platform build (marketplace, storage/logistics, payments flow, and pending-state engine) and team delivery.
+- **Oladeji Martins** (AI / Business Analyst): Designs the AI assistant, complaint urgency triage, and growth-plan logic; shapes partner discussions and bank incentives.
+- **Obinyan Emmanuel Onosetale** (Data Analyst): Builds financial insights (revenue/expenditure breakdowns, production and revenue % change, loss tracking, and pilot metrics).
+- **Kayode Toluwani Prosper** (QA / QT): Tests payment retry and pending states, complaint routing, data accuracy, security, and usability.
+
+---
+
+## 8. Pending-State Payment Protection Engine
+- **Single Customer Transaction**: When transfers experience incomplete network states or delay, the transaction enters `pending`. No duplicate charge or failed records are displayed to the customer.
+- **Idempotency**: Automatic background retries use exponential backoff intervals (`30s`, `120s`, `300s`, `900s`) using the identical original provider reference (`TRX-...`).
+- **Hold Release on Timeout**: If the retry window expires without switch confirmation, the status transitions to `not_completed` and all funds holds are released.
+- **Internal Audit Trails**: Every attempt is logged in `PaymentEvent` for bank reconciliation but abstracted from customer view.
+
+---
+
+## 9. AI Complaint Triage & Business Financial Insights
+- **Urgency Scoring**:
+  - `CRITICAL`: Money debited without order confirmation, suspected fraud, imminent perishable loss (<24h).
+  - `HIGH`: Perishable produce in transit delay, loan disbursement failure.
+  - `MEDIUM`: Quality/grade dispute, document verification delay.
+  - `LOW`: General enquiry or platform how-to.
+- **Security Check**: AI assistant strictly enforces NDPA and banking security rules and never requests PIN, OTP, or password.
+- **Consent-Based Financials**: Monthly summary (₦2.4m revenue, ₦1.65m expenditure, ₦120k losses, ₦630k net, +8% production, +12% revenue) is shared with Zenith Bank only upon active customer opt-in.
+

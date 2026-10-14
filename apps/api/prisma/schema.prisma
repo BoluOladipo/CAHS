@@ -58,6 +58,8 @@ model User {
   refreshTokens           RefreshToken[]
   aiInteractions          AiInteraction[]
   verificationReviews     VerificationSubmission[] @relation("VerificationReviewer")
+  complaintCases          ComplaintCase[]
+  financialProfile        BusinessFinancialProfile?
 }
 
 model Profile {
@@ -375,6 +377,9 @@ model Payment {
   status        String   @default("pending")
   providerRef   String   @unique
   method        String
+  retryCount    Int      @default(0)
+  nextRetryAt   DateTime?
+  holdReleased  Boolean  @default(false)
   createdAt     DateTime @default(now())
   events        PaymentEvent[]
   settlement    Settlement?
@@ -625,3 +630,43 @@ model ConfigKV {
   key   String @id
   value String
 }
+
+model ComplaintCase {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  category         String    // PAYMENT, DELIVERY, DISPUTE, LOAN, REFUND, ACCOUNT
+  priority         String    // CRITICAL, HIGH, MEDIUM, LOW
+  status           String    @default("RECEIVED") // RECEIVED, INVESTIGATING, RESOLVED
+  summary          String
+  stepsTried       String?
+  relatedTxnRef    String?
+  relatedOrderId   String?
+  assignedTo       String?
+  resolutionNote   String?
+  resolvedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([priority, status])
+}
+
+model BusinessFinancialProfile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+  monthLabel        String   @default("Current Month")
+  totalRevenue      Float    @default(2400000)
+  totalExpenditure  Float    @default(1650000)
+  recordedLosses    Float    @default(120000)
+  netResult         Float    @default(630000)
+  prodChangePercent Float    @default(8.0)
+  revChangePercent  Float    @default(12.0)
+  sharedWithBank    Boolean  @default(false)
+  sharedAt          DateTime?
+  breakdownJson     String?
+  aiPlanJson        String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+

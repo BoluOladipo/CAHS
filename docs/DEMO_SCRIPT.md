@@ -92,3 +92,50 @@ All test accounts share the demo password: **`Demo1234!`**
 4. Open the **Pilot Analytics Dashboard** (`/app/admin/analytics`):
    - Review metrics grouped by Customer Growth, Marketplace Activity, Service Quality, and Financial Outcomes.
    - Show that Gross Transaction Value and Customer Deposits are strictly separated from CAHS operational revenue.
+
+### Step 9: Zecathon Feature 1 — AI Support & Urgency Triage (7:00 - 8:00)
+1. Go to **AI Support & Triage** (`/app/support`).
+2. Demonstrate **Stage 1 (Guided Self-Service)**:
+   - Select the prompt: *"Money debited from my account but order is still showing unpaid"*.
+   - Click **Analyze with AI Assistant**.
+   - Show instant classification: Category `PAYMENT`, Assessed Urgency `CRITICAL`.
+   - Point out the internal system lookup fact and numbered resolution steps.
+   - Highlight the security notice: *"Security reminder: Neither CAHS nor Zenith Bank will ever ask for your PIN, OTP, or password."*
+3. Demonstrate **Stage 2 (Urgency Escalation)**:
+   - Click **No — Escalate to Zenith Bank Team**.
+   - Case is created with priority `CRITICAL` at the top of the bank triage pool.
+4. Switch to `bank@cahs.demo` -> **Complaint queue** (`/app/bank/complaints`):
+   - Show the live urgency-ranked dashboard with Critical cases highlighted at the top.
+   - Click **Assign to Me**, enter an investigation note, and click **Confirm Resolve**.
+   - Switch back to customer view to show the live resolution status update!
+
+### Step 10: Zecathon Feature 2 — Pending-State Payment Protection (8:00 - 9:00)
+1. Go to the **Simulated Payment Sandbox** (`/app/pay`).
+2. Click **Incomplete Transfer (Trigger Pending)**.
+3. Point out the single customer transaction card:
+   - Status: `PENDING (Background retry scheduled)`.
+   - Guarantee: *"You see one single transaction and will not be charged twice."*
+4. Click **Run Background Retry Attempt**: increments retry attempt with exponential backoff timestamp.
+5. Click **Simulate Bank Confirmation (Success)**: status updates to Successful and fulfills order.
+6. Open **Pending payments engine** (`/app/admin/payments-engine`):
+   - Show the timestamped bank switch audit ledger tracking every attempt without cluttering the customer experience.
+   - Demonstrate the **Timeout & Hold Release** simulation: releases all holds back to the user with zero debit.
+
+### Step 11: Zecathon Feature 3 — Business Financial Insights (9:00 - 10:00)
+1. Go to **Financial insights** (`/app/insights`).
+2. Review the monthly summary matching the Zecathon 6.0 specification:
+   - **Total Revenue**: ₦2,400,000 (`+12%` growth vs prior month)
+   - **Total Expenditure**: ₦1,650,000
+   - **Recorded Losses**: ₦120,000 (ambient heat spoilage & transit damage)
+   - **Net Margin Cash Flow**: ₦630,000 (`+8%` production volume)
+3. Inspect the **AI Business Growth Plan**:
+   - Cold Chain Spoilage Mitigation (+₦52,000/mo recovered)
+   - Freight Consolidation Pooling (-₦35,000 transport cost)
+   - High-Demand Crop Shift (+14% demand index)
+   - Zenith Working Capital Pre-Qualification (up to ₦1.5m seasonal credit)
+4. Demonstrate **Consent-Based Underwriting**:
+   - Toggle **Grant Consent to Share with Bank**.
+5. Switch to `bank@cahs.demo` -> **Customer insights** (`/app/bank/insights`):
+   - Select Amina Yusuf (`farmer@cahs.demo`).
+   - The officer views the verified monthly figures and AI cash flow analysis to underwrite seasonal loans without manual paperwork!
+

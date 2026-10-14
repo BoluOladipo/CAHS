@@ -21,6 +21,8 @@ const NAV: Record<string, { to: string; label: string }[]> = {
     { to: "/app/orders", label: "Orders" },
     { to: "/app/storage", label: "Storage" },
     { to: "/app/logistics", label: "Transport" },
+    { to: "/app/insights", label: "Financial insights" },
+    { to: "/app/support", label: "AI Support & Triage" },
     { to: "/app/loans", label: "Loans" },
     { to: "/app/savings", label: "Savings" },
     { to: "/app/rewards", label: "Rewards" },
@@ -31,27 +33,35 @@ const NAV: Record<string, { to: string; label: string }[]> = {
     { to: "/app/orders", label: "Orders" },
     { to: "/app/logistics", label: "Shipments" },
     { to: "/app/storage", label: "Storage" },
+    { to: "/app/insights", label: "Financial insights" },
+    { to: "/app/support", label: "AI Support & Triage" },
     { to: "/app/loans", label: "Loans" },
     { to: "/app/savings", label: "Savings" },
   ],
   STORAGE_PROVIDER: [
     { to: "/app", label: "Home" },
     { to: "/app/warehouse", label: "Facilities" },
+    { to: "/app/support", label: "AI Support" },
     { to: "/app/verification", label: "Verification" },
   ],
   LOGISTICS_PROVIDER: [
     { to: "/app", label: "Home" },
     { to: "/app/fleet", label: "Jobs & fleet" },
+    { to: "/app/support", label: "AI Support" },
     { to: "/app/verification", label: "Verification" },
   ],
   BANK_OFFICER: [
     { to: "/app", label: "Home" },
     { to: "/app/bank/loans", label: "Loan queue" },
+    { to: "/app/bank/complaints", label: "Complaint queue" },
+    { to: "/app/bank/insights", label: "Customer insights" },
     { to: "/app/admin/analytics", label: "Pilot dashboard" },
     { to: "/app/admin/config", label: "Products" },
   ],
   PLATFORM_ADMIN: [
     { to: "/app", label: "Home" },
+    { to: "/app/admin/payments-engine", label: "Pending payments engine" },
+    { to: "/app/bank/complaints", label: "Complaint queue" },
     { to: "/app/admin/verify", label: "Verifications" },
     { to: "/app/admin/disputes", label: "Disputes" },
     { to: "/app/admin/audit", label: "Audit" },
@@ -104,7 +114,7 @@ export function AppShell() {
         <Outlet />
       </main>
       <footer className="border-t border-sand px-4 py-6 text-center text-xs text-ink/70">
-        [Insert team lead name, email address and phone number] · Report fraud or error via the in-app form.
+        Oladipo Boluwaduro Emmanuel (Project Lead) · team@cahs.ng · +234 812 345 6789 · Report fraud or error via the in-app form.
         Gross transaction value and customer deposits are not CAHS revenue.
       </footer>
     </div>
@@ -131,7 +141,7 @@ export function PublicShell() {
       <footer className="mt-16 border-t border-sand px-4 py-8 text-center text-xs text-ink/70">
         Concept proposal. Subject to validation, approvals and partnership agreements.
         <br />
-        [Insert team lead name, email address and phone number]
+        Oladipo Boluwaduro Emmanuel (Project Lead) · team@cahs.ng · +234 812 345 6789
       </footer>
     </div>
   );

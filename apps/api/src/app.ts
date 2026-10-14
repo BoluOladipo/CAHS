@@ -18,6 +18,8 @@ import { loansRouter } from "./routes/loans.js";
 import { savingsRouter } from "./routes/savings.js";
 import { adminRouter } from "./routes/admin.js";
 import { notifyRouter, aiRouter, rewardsRouter } from "./routes/misc.js";
+import { supportRouter } from "./routes/support.js";
+import { insightsRouter } from "./routes/insights.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -53,6 +55,8 @@ export function createApp() {
   app.use("/api/notifications", notifyRouter);
   app.use("/api/ai", aiRouter);
   app.use("/api/rewards", rewardsRouter);
+  app.use("/api/support", supportRouter);
+  app.use("/api/insights", insightsRouter);
 
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);

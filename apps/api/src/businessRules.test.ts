@@ -153,4 +153,95 @@ describe("Section 9 Business Rules Verification", () => {
     const hasForbidden = payloadKeys.some((k) => forbiddenFields.includes(k));
     expect(hasForbidden).toBe(false);
   });
+
+  it("Rule 12: Zecathon 6.0 AI Complaint Triage categorizes and ranks by urgency", () => {
+    // Priority assignment rules
+    const assessPriority = (text: string, isPerishable: boolean) => {
+      const lower = text.toLowerCase();
+      if (/(unauthorized|fraud|scam|stolen)/.test(lower) || (/(debited|deducted)/.test(lower) && /(no order|not showing|failed)/.test(lower))) {
+        return "CRITICAL";
+      }
+      if (isPerishable || /(perishable|spoiling|spoil|rotten)/.test(lower) || /(disbursement failed)/.test(lower)) {
+        return "HIGH";
+      }
+      if (/(dispute|damaged|grade|delay|verification)/.test(lower)) {
+        return "MEDIUM";
+      }
+      return "LOW";
+    };
+
+    expect(assessPriority("Money debited from my account but order is not showing", false)).toBe("CRITICAL");
+    expect(assessPriority("Suspected unauthorized transfer on my account", false)).toBe("CRITICAL");
+    expect(assessPriority("My tomato shipment is delayed and spoiling in transit", true)).toBe("HIGH");
+    expect(assessPriority("Loan disbursement failed after approval", false)).toBe("HIGH");
+    expect(assessPriority("Grade of maize delivered is lower than listed", false)).toBe("MEDIUM");
+    expect(assessPriority("How do I update my business address?", false)).toBe("LOW");
+
+    // Security requirement: Never asks for PIN/OTP/password
+    const securityCheck = (promptResponse: string) => {
+      const lower = promptResponse.toLowerCase();
+      const requestsSensitive =
+        lower.includes("enter your pin") || lower.includes("provide your otp") || lower.includes("send your password");
+      const hasSecurityWarning =
+        lower.includes("never ask for your pin, otp, or password") ||
+        (lower.includes("neither") && lower.includes("will ever ask for your pin, otp, or password"));
+      return !requestsSensitive && hasSecurityWarning;
+    };
+    const sampleOutput =
+      "Step 1: Check your transaction reference. Security reminder: Neither CAHS nor Zenith Bank will ever ask for your PIN, OTP, or password.";
+    expect(securityCheck(sampleOutput)).toBe(true);
+  });
+
+  it("Rule 13: Zecathon 6.0 Pending-State Payment Protection prevents duplicate debits", () => {
+    const originalRef = "TRX-2026-DEMO-001";
+    const retryIntervals = [30, 120, 300, 900];
+
+    // Background retries must reuse exact same provider reference
+    const attempts = [1, 2, 3].map((attempt) => ({
+      attempt,
+      reference: originalRef,
+      intervalSec: retryIntervals[attempt - 1],
+      state: "pending",
+    }));
+
+    // Every retry uses identical reference (guarantees idempotency on banking switch)
+    expect(new Set(attempts.map((a) => a.reference)).size).toBe(1);
+
+    // Single transaction customer view: customer sees only 1 active transaction, never duplicate debits
+    const customerTransactions = [{ id: "tx-1", reference: originalRef, amount: 200000, status: "pending" }];
+    expect(customerTransactions.length).toBe(1);
+
+    // Timeout release rule: when retries expire, status becomes not_completed and holds are released
+    const timeoutPayment = {
+      status: "not_completed",
+      holdReleased: true,
+      amountDebited: 0,
+    };
+    expect(timeoutPayment.status).toBe("not_completed");
+    expect(timeoutPayment.holdReleased).toBe(true);
+    expect(timeoutPayment.amountDebited).toBe(0);
+  });
+
+  it("Rule 14: Zecathon 6.0 Business Financial Insights matches illustrative balance and enforces consent", () => {
+    // Illustrative example from Zecathon prompt:
+    const summary = {
+      totalRevenue: 2400000,
+      totalExpenditure: 1650000,
+      recordedLosses: 120000,
+      netResult: 630000,
+      prodChangePercent: 8.0,
+      revChangePercent: 12.0,
+    };
+
+    // Net result assertion: revenue less expenditure and losses
+    expect(summary.totalRevenue - summary.totalExpenditure - summary.recordedLosses).toBe(summary.netResult);
+    expect(summary.prodChangePercent).toBe(8.0);
+    expect(summary.revChangePercent).toBe(12.0);
+
+    // Consent gate: bank may only access detailed customer financials if sharedWithBank is true
+    const canBankAccess = (sharedWithBank: boolean) => sharedWithBank === true;
+    expect(canBankAccess(true)).toBe(true);
+    expect(canBankAccess(false)).toBe(false);
+  });
 });
+

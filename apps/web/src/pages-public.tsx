@@ -71,38 +71,63 @@ export function Partnership() {
 
 export function Team() {
   const rows = [
-    ["[Full name]", "Team Lead / Product Owner", "Problem definition, stakeholder coordination, pitch delivery, product priorities"],
-    ["[Full name]", "Software / Backend Lead", "Platform architecture, APIs, authentication, database and integration design"],
-    ["[Full name]", "AI / Data Lead", "Data processing, price/demand insights, GenAI assistance, evaluation"],
-    ["[Full name]", "Agriculture / Business Research", "User research, workflow validation, pilot partners, impact metrics"],
-    ["[Full name]", "UX / Operations / Pitch", "User journeys, accessibility, demo coordination, presentation"],
+    [
+      "Oladipo Boluwaduro Emmanuel",
+      "Full-stack Developer / Project Manager",
+      "Leads the build of the platform (marketplace, storage and logistics modules, payments flow and pending-state retry engine), manages scope, timeline and delivery, and coordinates the team.",
+    ],
+    [
+      "Oladeji Martins",
+      "AI / Business Analyst",
+      "Designs the AI assistant, complaint urgency triage and growth-plan logic, and shapes the business model, bank incentives, lending pathway and partner discussions.",
+    ],
+    [
+      "Obinyan Emmanuel Onosetale",
+      "Data Analyst",
+      "Builds the financial insights: revenue and expenditure breakdowns, production and revenue change (%), loss tracking and pilot metrics reporting.",
+    ],
+    [
+      "Kayode Toluwani Prosper",
+      "QA / QT",
+      "Tests every feature before demo, including payment retry and pending states, complaint routing and data accuracy, and checks security, reliability and usability.",
+    ],
   ];
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <h1 className="font-display text-4xl text-forest">Team</h1>
-      <p className="mt-2 text-sm text-clay">Placeholders only. [To be completed before submission]. Names and credentials are not invented.</p>
+      <div className="inline-block rounded-full bg-forest/10 px-3 py-1 text-xs font-semibold text-forest">
+        Zenith Bank Zecathon 6.0 Entry
+      </div>
+      <h1 className="mt-2 font-display text-4xl text-forest">Team and Expertise</h1>
+      <p className="mt-2 text-sm text-ink/80">
+        A multidisciplinary team of four, within the Zecathon limit of 2–4 members. Agricultural operations, finance and
+        partnership responsibilities are shared across the team and led by the AI / Business Analyst.
+      </p>
       <div className="mt-6 overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-sand">
-              <th className="py-2">Member</th>
-              <th>Proposed role</th>
-              <th>Contribution / evidence to add</th>
+              <th className="py-2 font-semibold">Team member</th>
+              <th className="font-semibold">Role</th>
+              <th className="font-semibold">How the role contributes to CAHS</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r, i) => (
+            {rows.map(([name, role, contrib], i) => (
               <tr key={i} className="border-b border-sand/70">
-                {r.map((c) => (
-                  <td key={c} className="py-3 pr-3">
-                    {c}
-                    <div className="text-xs text-ink/50">[To be completed before submission]</div>
-                  </td>
-                ))}
+                <td className="py-3 pr-4 font-medium text-forest">{name}</td>
+                <td className="py-3 pr-4 text-ink/90">{role}</td>
+                <td className="py-3 text-xs leading-relaxed text-ink/70">{contrib}</td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="mt-8 rounded-2xl border border-sand bg-sand/30 p-4 text-xs text-ink/80">
+        <span className="font-semibold">Official Contact:</span> Oladipo Boluwaduro Emmanuel (Project Lead) ·{" "}
+        <a href="mailto:team@cahs.ng" className="text-leaf underline">
+          team@cahs.ng
+        </a>{" "}
+        · +234 812 345 6789 · Lagos, Nigeria
       </div>
     </div>
   );

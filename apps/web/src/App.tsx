@@ -9,8 +9,11 @@ import {
   Analytics,
   Assistant,
   BankQueue,
+  BankComplaintsQueue,
+  BankCustomerInsights,
   Compare,
   FarmerListings,
+  FinancialInsightsPage,
   FleetPage,
   FraudForm,
   Home,
@@ -22,6 +25,7 @@ import {
   Market,
   OrderDetail,
   Orders,
+  PaymentsEnginePage,
   PaySandbox,
   PrivacyPage,
   RequireAuth,
@@ -29,6 +33,7 @@ import {
   SavingsPage,
   Shipment,
   StoragePage,
+  SupportPage,
   VerificationPage,
   WarehouseOps,
 } from "./pages-app";
@@ -68,11 +73,16 @@ export default function App() {
         <Route path="loans" element={<LoansPage />} />
         <Route path="loans/:id" element={<LoanDetail />} />
         <Route path="bank/loans" element={<BankQueue />} />
+        <Route path="bank/complaints" element={<BankComplaintsQueue />} />
+        <Route path="bank/insights" element={<BankCustomerInsights />} />
+        <Route path="insights" element={<FinancialInsightsPage />} />
+        <Route path="support" element={<SupportPage />} />
         <Route path="savings" element={<SavingsPage />} />
         <Route path="assistant" element={<Assistant />} />
         <Route path="privacy" element={<PrivacyPage />} />
         <Route path="rewards" element={<Rewards />} />
         <Route path="verification" element={<VerificationPage />} />
+        <Route path="admin/payments-engine" element={<PaymentsEnginePage />} />
         <Route path="admin/verify" element={<AdminVerify />} />
         <Route path="admin/disputes" element={<AdminDisputes />} />
         <Route path="admin/audit" element={<AdminAudit />} />
