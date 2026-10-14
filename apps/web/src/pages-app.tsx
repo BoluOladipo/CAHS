@@ -19,62 +19,201 @@ function useLoad<T>(fn: () => Promise<T>, deps: unknown[] = []) {
 
 export function Home() {
   const { user } = useAuth();
+  const roleActions: Record<string, { label: string; to: string; desc: string }[]> = {
+    FARMER: [
+      { label: "My Produce Listings", to: "/app/listings/mine", desc: "Publish crops and manage inventory" },
+      { label: "Incoming Orders", to: "/app/orders", desc: "Accept or decline buyer purchase requests" },
+      { label: "Book Warehouse Storage", to: "/app/storage", desc: "Reserve dry or cold storage at verified hubs" },
+      { label: "Request Transport", to: "/app/logistics", desc: "Get quotes from verified haulage providers" },
+      { label: "Agricultural Loans", to: "/app/loans", desc: "Apply for seasonal working capital with bank review" },
+      { label: "Fixed-Term Savings", to: "/app/savings", desc: "Put harvest proceeds in projected-yield savings" },
+    ],
+    TRADER: [
+      { label: "Marketplace Discovery", to: "/app/market", desc: "Source produce directly from verified farmers" },
+      { label: "Order History", to: "/app/orders", desc: "Track purchases and pay via simulated sandbox" },
+      { label: "Logistics & Shipments", to: "/app/logistics", desc: "Request haulage and track milestones in real-time" },
+      { label: "Storage Facilities", to: "/app/storage", desc: "Secure warehouse space along transit routes" },
+      { label: "Savings Options", to: "/app/savings", desc: "Fixed-term interest options held with Zenith Bank" },
+    ],
+    STORAGE_PROVIDER: [
+      { label: "Warehouse Facilities", to: "/app/warehouse", desc: "Manage capacity, accept bookings and stock ledger" },
+      { label: "Business CAC Verification", to: "/app/verification", desc: "Submit corporate credentials for approved status" },
+    ],
+    LOGISTICS_PROVIDER: [
+      { label: "Jobs & Fleet", to: "/app/fleet", desc: "Manage drivers, vehicles and active assignments" },
+      { label: "Delivery Requests & Quotes", to: "/app/logistics", desc: "Submit competitive bids for produce transport" },
+      { label: "Business CAC Verification", to: "/app/verification", desc: "Submit corporate credentials for approved status" },
+    ],
+    BANK_OFFICER: [
+      { label: "Loan Review Queue", to: "/app/bank/loans", desc: "Inspect loan-readiness checklists and underwrite credit" },
+      { label: "Pilot Analytics Dashboard", to: "/app/admin/analytics", desc: "Monitor customer acquisition, retention and portfolio risk" },
+      { label: "Product Configuration", to: "/app/admin/config", desc: "Configure loan tenors, savings rates and fee rules" },
+    ],
+    PLATFORM_ADMIN: [
+      { label: "Business Verifications", to: "/app/admin/verify", desc: "Review CAC documents for storage & logistics providers" },
+      { label: "Dispute Moderation", to: "/app/admin/disputes", desc: "Arbitrate transaction disputes and issue refund decisions" },
+      { label: "Immutable Audit Log", to: "/app/admin/audit", desc: "Inspect detailed actor event records and system activity" },
+      { label: "Pilot Analytics", to: "/app/admin/analytics", desc: "Examine platform KPIs with GTV separated from revenue" },
+      { label: "System Configuration", to: "/app/admin/config", desc: "Manage platform fee rules and feature flags" },
+    ],
+  };
+
+  const actions = roleActions[user?.role ?? ""] ?? [];
+
   return (
-    <div className="space-y-4">
-      <h1 className="font-display text-3xl text-forest">Hello, {user?.fullName}</h1>
-      <p className="text-ink/70">Role: {user?.role.replaceAll("_", " ")}. Primary actions for your role are in the navigation.</p>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-sand pb-4">
+        <div>
+          <h1 className="font-display text-3xl text-forest">Welcome, {user?.fullName}</h1>
+          <p className="text-sm text-ink/70">
+            Account role: <span className="font-semibold">{user?.role.replaceAll("_", " ")}</span> · Location: {user?.lga}, {user?.state}
+          </p>
+        </div>
+        {user?.isEligibleZenithCustomer && (
+          <span className="rounded-full bg-gold/20 px-3 py-1 text-xs font-semibold text-forest">
+            ★ Zenith Customer Status Active (Proposed Benefit)
+          </span>
+        )}
+      </div>
+
       {user?.isEligibleZenithCustomer && (
-        <Card>
-          <p className="text-sm font-semibold text-gold">Proposed partnership benefit</p>
-          <p>Eligible Zenith customer status is linked (simulated). Reduced fees and discounts apply only while this flag is true and the rule is active.</p>
+        <Card className="border-gold/40 bg-gold/5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-gold">Proposed partnership benefit</p>
+          <p className="mt-1 text-sm text-ink/80">
+            Your account is linked to Zenith Bank (simulated). You enjoy preferential 1.6% transaction fees (vs 2.0%) and a 6% discount on verified logistics.
+          </p>
         </Card>
       )}
+
+      <div>
+        <h2 className="font-display text-xl text-forest">Quick Actions</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {actions.map((a) => (
+            <Link key={a.to} to={a.to} className="group rounded-2xl border border-sand bg-white p-4 shadow-sm transition hover:border-leaf hover:shadow">
+              <p className="font-semibold text-forest group-hover:text-leaf">{a.label} →</p>
+              <p className="mt-1 text-xs text-ink/70">{a.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
 export function Market() {
   const [q, setQ] = useState("");
+  const [produce, setProduce] = useState("");
+  const [state, setState] = useState("");
+  const [grade, setGrade] = useState("");
+  const [verified, setVerified] = useState(false);
   const [compare, setCompare] = useState<string[]>([]);
-  const { data } = useLoad(() => api(`/api/listings?q=${encodeURIComponent(q)}`), [q]);
+
+  const queryParams = useMemo(() => {
+    const p = new URLSearchParams();
+    if (q) p.set("q", q);
+    if (produce) p.set("produce", produce);
+    if (state) p.set("state", state);
+    if (grade) p.set("grade", grade);
+    if (verified) p.set("verifiedSeller", "true");
+    return p.toString();
+  }, [q, produce, state, grade, verified]);
+
+  const { data } = useLoad(() => api(`/api/listings?${queryParams}`), [queryParams]);
+
   return (
-    <div>
-      <h1 className="font-display text-3xl">Marketplace</h1>
-      <input className="mt-4 w-full rounded-lg border border-sand px-3 py-2" placeholder="Search produce" value={q} onChange={(e) => setQ(e.target.value)} />
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl text-forest">Agricultural Marketplace</h1>
+        {compare.length > 1 && (
+          <Link className="rounded-full bg-forest px-4 py-1.5 text-xs text-cream" to={`/app/compare?ids=${compare.join(",")}`}>
+            Compare {compare.length} Selected Produce
+          </Link>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-sand bg-white p-4 shadow-sm">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <input
+            className="rounded-lg border border-sand px-3 py-2 text-sm"
+            placeholder="Search crop or keyword..."
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <select className="rounded-lg border border-sand px-3 py-2 text-sm" value={produce} onChange={(e) => setProduce(e.target.value)}>
+            <option value="">All Crops</option>
+            <option value="maize">Maize</option>
+            <option value="cassava">Cassava</option>
+            <option value="yam">Yam</option>
+            <option value="tomatoes">Tomatoes</option>
+            <option value="rice">Rice</option>
+            <option value="cocoa">Cocoa</option>
+          </select>
+          <select className="rounded-lg border border-sand px-3 py-2 text-sm" value={state} onChange={(e) => setState(e.target.value)}>
+            <option value="">All States</option>
+            <option value="Kano">Kano</option>
+            <option value="Benue">Benue</option>
+            <option value="Oyo">Oyo</option>
+            <option value="Kaduna">Kaduna</option>
+            <option value="Cross River">Cross River</option>
+            <option value="Lagos">Lagos</option>
+          </select>
+          <select className="rounded-lg border border-sand px-3 py-2 text-sm" value={grade} onChange={(e) => setGrade(e.target.value)}>
+            <option value="">All Grades</option>
+            <option value="A">Grade A (Premium)</option>
+            <option value="B">Grade B (Standard)</option>
+            <option value="C">Grade C (Commercial)</option>
+          </select>
+          <label className="flex items-center gap-2 text-xs font-medium text-ink/80">
+            <input type="checkbox" checked={verified} onChange={(e) => setVerified(e.target.checked)} className="rounded" />
+            Zenith Verified Farmers
+          </label>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data?.listings?.map((l: any) => (
-          <Card key={l.id}>
-            <div className="flex justify-between">
-              <h2 className="font-display text-xl capitalize">{l.produceType}</h2>
-              <span className="text-sm">{l.grade}</span>
+          <Card key={l.id} className="flex flex-col justify-between">
+            <div>
+              <div className="relative mb-3 h-36 w-full overflow-hidden rounded-xl bg-sand/30">
+                <img
+                  src={l.images?.[0]?.path ?? "/placeholder-produce.svg"}
+                  alt={l.images?.[0]?.alt ?? `${l.produceType} photo`}
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder-produce.svg";
+                  }}
+                />
+                <span className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold shadow-sm">
+                  Grade {l.grade}
+                </span>
+                {l.farmer?.isEligibleZenithCustomer && (
+                  <span className="absolute left-2 top-2 rounded-full bg-gold/90 px-2 py-0.5 text-xs font-semibold text-forest shadow-sm">
+                    Verified Seller
+                  </span>
+                )}
+              </div>
+              <h2 className="font-display text-xl capitalize text-forest">{l.produceType}</h2>
+              <p className="mt-1 font-semibold text-leaf">
+                {l.quantity} {l.unit} available · {naira(l.pricePerUnit)} / {l.unit}
+              </p>
+              <p className="mt-0.5 text-xs text-ink/70">
+                {l.state} · Farmer: {l.farmer.fullName}
+              </p>
             </div>
-            <p>
-              {l.quantity} {l.unit} · {naira(l.pricePerUnit)} / {l.unit}
-            </p>
-            <p className="text-sm text-ink/60">
-              {l.state} · {l.farmer.fullName}
-            </p>
-            <div className="mt-3 flex gap-2 text-sm">
-              <Link className="text-leaf underline" to={`/app/listings/${l.id}`}>
-                Open
+            <div className="mt-4 flex items-center justify-between border-t border-sand/40 pt-3 text-sm">
+              <Link className="font-medium text-leaf underline" to={`/app/listings/${l.id}`}>
+                View details & order →
               </Link>
               <button
-                className="underline"
+                className="text-xs text-ink/70 underline hover:text-ink"
                 onClick={() => setCompare((c) => (c.includes(l.id) ? c.filter((x) => x !== l.id) : [...c, l.id].slice(0, 3)))}
               >
-                {compare.includes(l.id) ? "Remove compare" : "Compare"}
+                {compare.includes(l.id) ? "Remove compare" : "+ Compare"}
               </button>
             </div>
           </Card>
         ))}
       </div>
-      {compare.length > 1 && (
-        <p className="mt-4">
-          <Link className="text-leaf underline" to={`/app/compare?ids=${compare.join(",")}`}>
-            Compare {compare.length} listings
-          </Link>
-        </p>
-      )}
     </div>
   );
 }
@@ -130,18 +269,33 @@ export function ListingDetail() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
-        <h1 className="font-display text-3xl capitalize">{listing.produceType}</h1>
-        <p>
+        <div className="relative mb-4 h-48 w-full overflow-hidden rounded-xl bg-sand/30">
+          <img
+            src={listing.images?.[0]?.path ?? "/placeholder-produce.svg"}
+            alt={listing.images?.[0]?.alt ?? `${listing.produceType} photo`}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder-produce.svg";
+            }}
+          />
+          <span className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold shadow-sm">
+            Grade {listing.grade}
+          </span>
+        </div>
+        <h1 className="font-display text-3xl capitalize text-forest">{listing.produceType}</h1>
+        <p className="mt-1 font-semibold text-leaf">
           {listing.quantity} {listing.unit} available · {naira(listing.pricePerUnit)}
         </p>
-        <p className="text-sm">
+        <p className="text-sm text-ink/70">
           {listing.state}, {listing.lga} · Grade {listing.grade}
         </p>
         {data.priceInsight && (
-          <p className="mt-4 text-sm">
-            Indicative price range {data.priceInsight.indicativeMin}–{data.priceInsight.indicativeMax} ({data.priceInsight.demandSignal}).{" "}
+          <div className="mt-4 rounded-xl border border-sand bg-sand/20 p-3 text-xs text-ink/80">
+            <span className="font-semibold text-forest">AI Price Guidance (Advisory): </span>
+            Indicative range {data.priceInsight.indicativeMin ? naira(data.priceInsight.indicativeMin) : "N/A"}–
+            {data.priceInsight.indicativeMax ? naira(data.priceInsight.indicativeMax) : "N/A"} ({data.priceInsight.demandSignal}).{" "}
             {data.priceInsight.basis} Confidence: {data.priceInsight.confidence}.
-          </p>
+          </div>
         )}
       </Card>
       {user?.role === "TRADER" && (
@@ -194,6 +348,9 @@ export function FeeWidget({ amount, logistics }: { amount: number; logistics: nu
 export function FarmerListings() {
   const { data, reload } = useLoad(() => api("/api/listings"));
   const { user } = useAuth();
+  const [crop, setCrop] = useState("maize");
+  const { data: priceData } = useLoad(() => (crop ? api(`/api/price-insights?produce=${encodeURIComponent(crop)}`) : Promise.resolve(null)), [crop]);
+
   async function create(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -216,19 +373,56 @@ export function FarmerListings() {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
-        <h1 className="font-display text-2xl">New listing</h1>
-        <form onSubmit={create} className="mt-3 space-y-2 text-sm">
-          <input name="produceType" placeholder="Produce" className="w-full rounded border border-sand px-2 py-1" required />
-          <input name="quantity" type="number" placeholder="Quantity" className="w-full rounded border border-sand px-2 py-1" required />
-          <input name="unit" defaultValue="kg" className="w-full rounded border border-sand px-2 py-1" />
-          <input name="pricePerUnit" type="number" placeholder="Price per unit" className="w-full rounded border border-sand px-2 py-1" required />
-          <select name="grade" className="w-full rounded border border-sand px-2 py-1">
-            <option>A</option>
-            <option>B</option>
-            <option>C</option>
-          </select>
-          <input name="harvestNotes" placeholder="Harvest notes" className="w-full rounded border border-sand px-2 py-1" />
-          <button className="rounded-full bg-forest px-4 py-2 text-cream">Publish</button>
+        <h1 className="font-display text-2xl text-forest">Create Produce Listing</h1>
+        <form onSubmit={create} className="mt-3 space-y-3 text-sm">
+          <div>
+            <label className="block text-xs font-semibold text-ink/70">Produce Type</label>
+            <input
+              name="produceType"
+              placeholder="e.g. maize, yam, cassava"
+              value={crop}
+              onChange={(e) => setCrop(e.target.value)}
+              className="mt-1 w-full rounded border border-sand px-2 py-1.5"
+              required
+            />
+          </div>
+          {priceData?.priceInsight && (
+            <div className="rounded-xl border border-sand bg-sand/20 p-2.5 text-xs text-ink/80">
+              <span className="font-semibold text-forest">AI Price Guidance (Advisory): </span>
+              Indicative range {priceData.priceInsight.indicativeMin ? naira(priceData.priceInsight.indicativeMin) : "N/A"}–
+              {priceData.priceInsight.indicativeMax ? naira(priceData.priceInsight.indicativeMax) : "N/A"}{" "}
+              ({priceData.priceInsight.demandSignal})
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-ink/70">Quantity</label>
+              <input name="quantity" type="number" placeholder="e.g. 500" className="mt-1 w-full rounded border border-sand px-2 py-1.5" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink/70">Unit</label>
+              <input name="unit" defaultValue="kg" className="mt-1 w-full rounded border border-sand px-2 py-1.5" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-xs font-semibold text-ink/70">Price per unit (₦)</label>
+              <input name="pricePerUnit" type="number" placeholder="Price ₦" className="mt-1 w-full rounded border border-sand px-2 py-1.5" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-ink/70">Quality Grade</label>
+              <select name="grade" className="mt-1 w-full rounded border border-sand px-2 py-1.5">
+                <option value="A">Grade A (Premium)</option>
+                <option value="B">Grade B (Standard)</option>
+                <option value="C">Grade C (Commercial)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-ink/70">Harvest Notes & Window</label>
+            <input name="harvestNotes" placeholder="e.g. Fresh harvest, dry bagged" className="mt-1 w-full rounded border border-sand px-2 py-1.5" />
+          </div>
+          <button className="rounded-full bg-forest px-5 py-2 text-cream hover:bg-forest/90">Publish Listing</button>
         </form>
       </Card>
       <div className="space-y-3">
@@ -281,7 +475,10 @@ export function Orders() {
 
 export function OrderDetail() {
   const { id } = useParams();
-  const { data, reload } = useLoad(() => api("/api/orders").then((d) => d.orders.find((o: any) => o.id === id)), [id]);
+  const { data, reload } = useLoad(
+    () => api(`/api/orders/${id}`).then((d) => d.order).catch(() => api("/api/orders").then((d) => d.orders.find((o: any) => o.id === id))),
+    [id],
+  );
   const nav = useNavigate();
   if (!data) return <p>Loading…</p>;
   async function pay() {
@@ -293,29 +490,71 @@ export function OrderDetail() {
     reload();
   }
   return (
-    <Card>
-      <h1 className="font-display text-2xl">Order {data.status}</h1>
-      <ul className="mt-3 text-sm">
-        <li>Produce subtotal {naira(data.subtotal)}</li>
-        <li>Platform fee {naira(data.platformFee)} {data.zenithDiscount ? `(Zenith discount ${naira(data.zenithDiscount)}, funder ${data.discountFunder})` : ""}</li>
-        <li>Logistics {naira(data.logisticsCharge)}</li>
-        <li className="font-semibold">Total due {naira(data.totalDue)}</li>
+    <Card className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-sand pb-3">
+        <h1 className="font-display text-2xl text-forest">Order #{data.id.slice(0, 8)}</h1>
+        <span className="rounded-full bg-sand/60 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-forest">
+          Status: {data.status.replaceAll("_", " ")}
+        </span>
+      </div>
+
+      {data.items && data.items.length > 0 && (
+        <div className="rounded-xl border border-sand bg-sand/10 p-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-ink/70">Order Items</h2>
+          <div className="mt-2 divide-y divide-sand/40 text-sm">
+            {data.items.map((it: any) => (
+              <div key={it.id} className="flex justify-between py-1.5">
+                <span className="font-medium capitalize">{it.listing?.produceType ?? "Produce"}</span>
+                <span>
+                  {it.quantity} units · {naira(it.unitPrice)} / unit
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <ul className="space-y-1.5 text-sm">
+        <li className="flex justify-between text-ink/80">
+          <span>Produce Subtotal:</span>
+          <span>{naira(data.subtotal)}</span>
+        </li>
+        <li className="flex justify-between text-ink/80">
+          <span>
+            Platform Fee:{" "}
+            {data.zenithDiscount > 0 && (
+              <span className="text-xs text-gold">(Zenith discount {naira(data.zenithDiscount)} funded by {data.discountFunder})</span>
+            )}
+          </span>
+          <span>{naira(data.platformFee)}</span>
+        </li>
+        <li className="flex justify-between text-ink/80">
+          <span>Logistics Charge ({data.deliveryMode.replaceAll("_", " ")}):</span>
+          <span>{naira(data.logisticsCharge)}</span>
+        </li>
+        <li className="flex justify-between border-t border-sand pt-2 text-base font-bold text-forest">
+          <span>Total Amount Due:</span>
+          <span>{naira(data.totalDue)}</span>
+        </li>
       </ul>
-      {data.status === "payment_pending" && (
-        <button className="mt-4 rounded-full bg-forest px-4 py-2 text-cream" onClick={pay}>
-          Pay in sandbox
-        </button>
-      )}
-      {data.status === "delivered" && (
-        <button className="mt-4 rounded-full bg-forest px-4 py-2 text-cream" onClick={complete}>
-          Confirm receipt
-        </button>
-      )}
-      {data.deliveryMode === "logistics" && (
-        <Link className="mt-4 block text-leaf underline" to="/app/logistics">
-          Arrange / track logistics
-        </Link>
-      )}
+
+      <div className="flex flex-wrap gap-3 pt-2">
+        {data.status === "payment_pending" && (
+          <button className="rounded-full bg-forest px-5 py-2 text-sm text-cream hover:bg-forest/90" onClick={pay}>
+            Proceed to Simulated Checkout →
+          </button>
+        )}
+        {data.status === "delivered" && (
+          <button className="rounded-full bg-forest px-5 py-2 text-sm text-cream hover:bg-forest/90" onClick={complete}>
+            Confirm Receipt & Release Funds
+          </button>
+        )}
+        {data.deliveryMode === "logistics" && (
+          <Link className="rounded-full border border-forest px-4 py-2 text-sm font-medium text-forest hover:bg-sand/20" to="/app/logistics">
+            View / Track Haulage
+          </Link>
+        )}
+      </div>
     </Card>
   );
 }
@@ -486,7 +725,19 @@ export function StoragePage() {
           )}
         </Card>
       ))}
-      {occ?.facilities && <pre className="overflow-auto rounded bg-white p-3 text-xs">{JSON.stringify(occ.facilities, null, 2)}</pre>}
+      {user?.role === "STORAGE_PROVIDER" && (
+        <Card className="border-leaf/30 bg-leaf/5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-display text-lg text-forest">Facility Operations & Bookings</h3>
+              <p className="text-xs text-ink/70">Inspect incoming bookings, approve requests, and maintain the stock ledger</p>
+            </div>
+            <Link to="/app/warehouse" className="rounded-full bg-forest px-4 py-2 text-xs text-cream hover:bg-forest/90">
+              Open Warehouse Ops →
+            </Link>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
@@ -529,6 +780,7 @@ export function WarehouseOps() {
 
 export function Ledger() {
   const { id } = useParams();
+  const { user } = useAuth();
   const { data, reload } = useLoad(() => api(`/api/storage/bookings/${id}/ledger`), [id]);
   async function move(kind: string) {
     await api(`/api/storage/bookings/${id}/movement`, { method: "POST", body: JSON.stringify({ kind, quantity: 10, condition: "good" }) });
@@ -536,26 +788,57 @@ export function Ledger() {
   }
   if (!data) return <p>Loading…</p>;
   return (
-    <Card>
-      <h1 className="font-display text-2xl">Stock ledger</h1>
-      <p>
-        Intake {data.intake} · Dispatch {data.dispatch} · Balance {data.balance}
-      </p>
-      <div className="mt-3 flex gap-2">
-        <button className="rounded border px-3 py-1" onClick={() => move("intake")}>
-          Record intake +10
-        </button>
-        <button className="rounded border px-3 py-1" onClick={() => move("dispatch")}>
-          Record dispatch +10
-        </button>
+    <Card className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 border-b border-sand pb-3">
+        <div>
+          <h1 className="font-display text-2xl text-forest">Stock Movement Ledger</h1>
+          <p className="text-sm text-ink/70">
+            Facility: {data.booking?.facility?.name} · Crop: <span className="font-semibold capitalize">{data.booking?.produceType}</span>
+          </p>
+        </div>
+        {data.risk && (
+          <div
+            className={`rounded-xl px-3 py-1.5 text-xs font-semibold ${
+              data.risk.level === "high"
+                ? "bg-red-100 text-red-800"
+                : data.risk.level === "moderate"
+                  ? "bg-amber-100 text-amber-800"
+                  : "bg-emerald-100 text-emerald-800"
+            }`}
+          >
+            Post-harvest Spoilage Risk: {data.risk.level.toUpperCase()} (Advisory)
+          </div>
+        )}
       </div>
-      <ul className="mt-4 text-sm">
-        {data.booking.movements.map((m: any) => (
-          <li key={m.id}>
-            {m.kind} {m.quantity} · {m.condition}
-          </li>
-        ))}
-      </ul>
+
+      <div className="flex flex-wrap gap-4 text-sm font-medium">
+        <span className="rounded-lg bg-sand/30 px-3 py-1">Total Intake: {data.intake}</span>
+        <span className="rounded-lg bg-sand/30 px-3 py-1">Total Dispatch: {data.dispatch}</span>
+        <span className="rounded-lg bg-leaf/20 px-3 py-1 font-semibold text-leaf">Reconciled Balance: {data.balance}</span>
+      </div>
+
+      {user?.role === "STORAGE_PROVIDER" && (
+        <div className="flex gap-2">
+          <button className="rounded-full bg-forest px-4 py-1.5 text-xs text-cream" onClick={() => move("intake")}>
+            + Record Intake (+10)
+          </button>
+          <button className="rounded-full border border-forest px-4 py-1.5 text-xs text-forest" onClick={() => move("dispatch")}>
+            - Record Dispatch (+10)
+          </button>
+        </div>
+      )}
+
+      <div>
+        <h3 className="font-display text-base text-forest">Movement Audit History</h3>
+        <ul className="mt-2 divide-y divide-sand/40 text-sm">
+          {data.booking.movements.map((m: any) => (
+            <li key={m.id} className="py-2 flex justify-between">
+              <span className="capitalize font-medium">{m.kind} {m.quantity} units</span>
+              <span className="text-ink/60">Condition: {m.condition}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </Card>
   );
 }

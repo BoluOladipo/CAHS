@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <rect width="400" height="300" fill="#f5f2eb" rx="16"/>
+  <g transform="translate(140, 70)">
+    <!-- Produce Basket / Grain Silhouette -->
+    <path d="M20 90 L100 90 L110 140 Q115 150 100 150 L20 150 Q5 150 10 140 Z" fill="#2d5a27" opacity="0.85"/>
+    <path d="M15 90 Q60 110 105 90" stroke="#d97706" stroke-width="4" fill="none"/>
+    <!-- Plant Sprouts -->
+    <path d="M60 90 Q60 40 85 30 Q75 55 60 90" fill="#3b7a33"/>
+    <path d="M60 90 Q60 45 35 35 Q45 60 60 90" fill="#4d9942"/>
+    <circle cx="60" cy="30" r="6" fill="#d97706"/>
+  </g>
+  <text x="200" y="245" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#2d5a27" text-anchor="middle" letter-spacing="1">
+    CAHS · DEMO PRODUCE
+  </text>
+  <text x="200" y="265" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#78716c" text-anchor="middle">
+    Simulated Listing Photo
+  </text>
+</svg>

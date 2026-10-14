@@ -146,7 +146,14 @@ storageRouter.get("/bookings/:id/ledger", requireAuth, async (req, res) => {
   if (!booking) return res.status(404).json({ error: "Not found" });
   const intake = booking.movements.filter((m) => m.kind === "intake").reduce((s, m) => s + m.quantity, 0);
   const dispatch = booking.movements.filter((m) => m.kind === "dispatch").reduce((s, m) => s + m.quantity, 0);
-  res.json({ booking, intake, dispatch, balance: runningBalance(intake, dispatch) });
+  const risk = await aiService.spoilageRisk({
+    crop: booking.produceType,
+    durationDays: booking.durationDays,
+    temperatureC: 26,
+    humidity: 65,
+    condition: "good",
+  });
+  res.json({ booking, intake, dispatch, balance: runningBalance(intake, dispatch), risk });
 });
 
 storageRouter.get("/occupancy", requireAuth, requireRole("STORAGE_PROVIDER"), async (req, res) => {

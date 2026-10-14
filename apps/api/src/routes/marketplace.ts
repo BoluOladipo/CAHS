@@ -119,6 +119,33 @@ marketplaceRouter.get("/orders", requireAuth, async (req, res) => {
   res.json({ orders });
 });
 
+marketplaceRouter.get("/orders/:id", requireAuth, async (req, res) => {
+  const order = await prisma.order.findUnique({
+    where: { id: req.params.id },
+    include: { items: { include: { listing: true } }, buyer: true, seller: true, payments: { include: { settlement: true } }, disputes: true },
+  });
+  if (!order) return res.status(404).json({ error: "Not found" });
+  if (
+    order.buyerId !== req.user!.id &&
+    order.sellerId !== req.user!.id &&
+    req.user!.role !== "PLATFORM_ADMIN" &&
+    req.user!.role !== "BANK_OFFICER"
+  ) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  res.json({ order });
+});
+
+marketplaceRouter.get("/price-insights", async (req, res) => {
+  const produce = String(req.query.produce ?? "maize").toLowerCase();
+  const history = await prisma.priceHistory.findMany({
+    where: { produceType: { equals: produce, mode: "insensitive" } },
+    orderBy: { month: "asc" },
+  });
+  const insight = await aiService.priceInsight(produce, history);
+  res.json({ priceInsight: insight });
+});
+
 marketplaceRouter.post("/orders", requireAuth, requireRole("TRADER"), async (req, res) => {
   const listingId = String(req.body.listingId);
   const quantity = Number(req.body.quantity);
