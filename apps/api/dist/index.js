@@ -14,4 +14,16 @@ if (!process.env.VERCEL) {
         console.log(`CAHS API listening on :${port} (Africa/Lagos). Prototype — simulated funds only.`);
     });
 }
-export default app;
+export default function handler(req, res) {
+    try {
+        return app(req, res);
+    }
+    catch (err) {
+        return res.status(500).json({
+            ok: false,
+            error: err?.message || String(err),
+            stack: err?.stack,
+            service: "cahs-api",
+        });
+    }
+}

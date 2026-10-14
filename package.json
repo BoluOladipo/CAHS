@@ -2,6 +2,7 @@
   "name": "cahs",
   "private": true,
   "version": "0.1.0",
+  "type": "module",
   "description": "Centralized Agro Hub — hackathon prototype (simulated finance)",
   "workspaces": [
     "apps/api",

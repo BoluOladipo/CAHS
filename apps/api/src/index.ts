@@ -18,4 +18,15 @@ if (!process.env.VERCEL) {
   });
 }
 
-export default app;
+export default function handler(req: any, res: any) {
+  try {
+    return app(req, res);
+  } catch (err: any) {
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || String(err),
+      stack: err?.stack,
+      service: "cahs-api",
+    });
+  }
+}

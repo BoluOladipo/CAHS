@@ -26,10 +26,21 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 export function createApp() {
   const app = express();
   app.set("trust proxy", 1);
-  app.use(helmet({ contentSecurityPolicy: false }));
+  app.use(helmet({ contentSecurityPolicy: false, hidePoweredBy: false }));
   app.use(cors({ origin: true, credentials: true }));
-  app.use(express.json({ limit: "2mb" }));
-  app.use(rateLimit({ windowMs: 60_000, max: 300 }));
+  app.use(
+    rateLimit({
+      windowMs: 60_000,
+      max: 300,
+      validate: false,
+      keyGenerator: (req) => {
+        const xff = req.headers["x-forwarded-for"];
+        if (typeof xff === "string") return xff.split(",")[0].trim();
+        if (Array.isArray(xff) && xff[0]) return xff[0].split(",")[0].trim();
+        return (req.socket && req.socket.remoteAddress) || "127.0.0.1";
+      },
+    })
+  );
   app.use("/uploads", express.static(config.uploadDir));
 
   app.get(["/health", "/api/health"], (_req, res) => {
@@ -65,5 +76,8 @@ export function createApp() {
   return app;
 }
 
-const defaultApp = createApp();
-export default defaultApp;
+let singletonApp: any = null;
+export default function handler(req: any, res: any) {
+  if (!singletonApp) singletonApp = createApp();
+  return singletonApp(req, res);
+}
