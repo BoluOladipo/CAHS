@@ -15,4 +15,12 @@ export const config = {
   uploadDir: process.env.UPLOAD_DIR ?? path.resolve(here, "../uploads"),
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? "",
   tz: process.env.TZ ?? "Africa/Lagos",
+  smtp: {
+    host: process.env.SMTP_HOST ?? "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT ?? 465),
+    secure: (process.env.SMTP_SECURE ?? "true") === "true" || process.env.SMTP_PORT === "465",
+    user: process.env.SMTP_USER ?? "",
+    pass: (process.env.SMTP_PASS ?? "").replace(/\s+/g, ""),
+    from: process.env.SMTP_FROM ?? '"Centralized Agro Hub (CAHS)" <boluoladipocodes@gmail.com>',
+  },
 };

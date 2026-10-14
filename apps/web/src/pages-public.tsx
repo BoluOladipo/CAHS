@@ -139,7 +139,30 @@ export function Login() {
   const [email, setEmail] = useState("trader.zenith@cahs.demo");
   const [password, setPassword] = useState("Demo1234!");
   const [otp, setOtp] = useState("");
+  const [otpMsg, setOtpMsg] = useState("");
+  const [requestingOtp, setRequestingOtp] = useState(false);
   const [err, setErr] = useState("");
+
+  async function onRequestOtp() {
+    if (!email) {
+      setErr("Enter your email address first");
+      return;
+    }
+    setRequestingOtp(true);
+    setOtpMsg("");
+    setErr("");
+    try {
+      const res = await api("/api/auth/request-otp", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      });
+      setOtpMsg(res.message || "OTP sent to your email!");
+    } catch (ex) {
+      setOtpMsg((ex as Error).message);
+    } finally {
+      setRequestingOtp(false);
+    }
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -175,10 +198,26 @@ export function Login() {
           Password
           <input type="password" className="mt-1 w-full rounded-lg border border-sand px-3 py-2" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
-        <label className="block text-sm">
-          Simulated OTP (staff only)
-          <input className="mt-1 w-full rounded-lg border border-sand px-3 py-2" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="123456" />
-        </label>
+        <div className="block text-sm">
+          <div className="flex items-center justify-between">
+            <span>Security OTP</span>
+            <button
+              type="button"
+              onClick={onRequestOtp}
+              disabled={requestingOtp}
+              className="text-xs font-medium text-leaf underline hover:text-forest disabled:opacity-50"
+            >
+              {requestingOtp ? "Sending code..." : "Email me a code"}
+            </button>
+          </div>
+          <input
+            className="mt-1 w-full rounded-lg border border-sand px-3 py-2"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            placeholder="6-digit email code or 123456"
+          />
+          {otpMsg && <p className="mt-1 text-xs text-leaf">{otpMsg}</p>}
+        </div>
         {err && <p className="text-sm text-clay">{err}</p>}
         <button className="w-full rounded-full bg-forest py-2.5 text-cream">Enter</button>
       </form>

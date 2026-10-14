@@ -1,6 +1,20 @@
 import { prisma } from "../prisma.js";
+import { sendNotificationEmail } from "../services/mailer.js";
 
 export async function notify(userId: string, title: string, body: string) {
-  await prisma.notification.create({ data: { userId, title, body } });
-  console.log(`[mock-mailer] to=${userId} subject=${title} body=${body}`);
+  const notif = await prisma.notification.create({ data: { userId, title, body } });
+
+  // Non-blocking email dispatch if recipient has an email address
+  prisma.user
+    .findUnique({ where: { id: userId }, select: { email: true, fullName: true } })
+    .then((user) => {
+      if (user?.email) {
+        return sendNotificationEmail(user.email, title, body, user.fullName);
+      }
+    })
+    .catch((err) => {
+      console.warn(`[notify] Failed to dispatch email notification for ${userId}:`, err);
+    });
+
+  return notif;
 }

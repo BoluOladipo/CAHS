@@ -8,6 +8,8 @@ import { config } from "../config.js";
 import { requireAuth } from "../middleware/auth.js";
 import { hashToken } from "../lib/crypto.js";
 import { audit } from "../lib/audit.js";
+import { createOtp, verifyOtp } from "../services/otp.js";
+import { sendOtpEmail } from "../services/mailer.js";
 
 export const authRouter = Router();
 
@@ -76,6 +78,24 @@ authRouter.post("/register", async (req, res) => {
   });
 });
 
+authRouter.post("/request-otp", async (req, res) => {
+  const email = String(req.body.email ?? "").trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    return res.status(400).json({ error: "A valid email address is required" });
+  }
+  const user = await prisma.user.findUnique({ where: { email } });
+  const code = createOtp(email);
+  const mailRes = await sendOtpEmail(email, code, user?.fullName);
+  res.json({
+    ok: true,
+    message: mailRes.ok
+      ? `Verification code sent to ${email}`
+      : `OTP generated (delivery notice: ${mailRes.error ?? "simulated"}). Demo code 123456 is also accepted.`,
+    delivered: mailRes.ok,
+    simulatedOtpHint: "Demo OTP 123456 is also accepted for evaluation.",
+  });
+});
+
 authRouter.post("/login", async (req, res) => {
   const email = String(req.body.email ?? "").toLowerCase();
   const password = String(req.body.password ?? "");
@@ -85,7 +105,13 @@ authRouter.post("/login", async (req, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: "Invalid credentials" });
   if (user.role === "BANK_OFFICER" || user.role === "PLATFORM_ADMIN") {
-    if (otp && otp !== "123456") return res.status(401).json({ error: "Invalid simulated OTP. Use 123456 in this prototype." });
+    if (otp && !verifyOtp(email, otp)) {
+      return res.status(401).json({ error: "Invalid OTP. Use the code sent to your email or 123456." });
+    }
+  } else if (otp) {
+    if (!verifyOtp(email, otp)) {
+      return res.status(401).json({ error: "Invalid OTP. Use the code sent to your email or 123456." });
+    }
   }
   const t = tokens({
     id: user.id,
@@ -104,7 +130,7 @@ authRouter.post("/login", async (req, res) => {
     user: publicUser(user),
     simulatedOtpHint:
       user.role === "BANK_OFFICER" || user.role === "PLATFORM_ADMIN"
-        ? "Simulated OTP for staff: 123456"
+        ? "Simulated OTP for staff: 123456 or request email code"
         : undefined,
   });
 });
@@ -141,9 +167,13 @@ authRouter.post("/logout", requireAuth, async (req, res) => {
 });
 
 authRouter.post("/password-reset", async (req, res) => {
-  const email = String(req.body.email ?? "").toLowerCase();
-  console.log(`[mock-mailer] password reset link for ${email} (simulated)`);
-  res.json({ ok: true, message: "If the account exists, a simulated reset email was logged." });
+  const email = String(req.body.email ?? "").toLowerCase().trim();
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user) {
+    const code = createOtp(email);
+    await sendOtpEmail(email, code, user.fullName);
+  }
+  res.json({ ok: true, message: "If the account exists, a verification code was dispatched to your email." });
 });
 
 authRouter.get("/me", requireAuth, async (req, res) => {
