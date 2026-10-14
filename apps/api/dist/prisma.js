@@ -1,34 +1,37 @@
-import { PrismaClient } from "@prisma/client";
 let prismaInstance = null;
-function getPrisma() {
+let prismaLoadFailed = false;
+async function getPrisma() {
     if (prismaInstance)
         return prismaInstance;
+    if (prismaLoadFailed)
+        return null;
     try {
-        prismaInstance = new PrismaClient();
+        const mod = await import("@prisma/client");
+        prismaInstance = new mod.PrismaClient();
         return prismaInstance;
     }
     catch (err) {
-        console.warn("[prisma] Could not initialize PrismaClient:", err.message);
-        return new Proxy({}, {
-            get(_target, prop) {
-                return new Proxy({}, {
-                    get(_subTarget, subProp) {
-                        return async () => {
-                            throw new Error(`Database offline: Prisma unavailable for ${String(prop)}.${String(subProp)}`);
-                        };
-                    },
-                });
-            },
-        });
+        prismaLoadFailed = true;
+        console.warn("[prisma] Could not load PrismaClient:", err.message);
+        return null;
     }
 }
 export const prisma = new Proxy({}, {
-    get(_target, prop) {
-        const client = getPrisma();
-        const val = client[prop];
-        if (typeof val === "function") {
-            return val.bind(client);
-        }
-        return val;
+    get(_target, modelName) {
+        return new Proxy({}, {
+            get(_subTarget, methodName) {
+                return async (...args) => {
+                    const client = await getPrisma();
+                    if (!client) {
+                        throw new Error(`Database offline: Prisma unavailable for ${String(modelName)}.${String(methodName)}`);
+                    }
+                    const model = client[modelName];
+                    if (!model || typeof model[methodName] !== "function") {
+                        throw new Error(`Prisma model or method not found: ${String(modelName)}.${String(methodName)}`);
+                    }
+                    return model[methodName](...args);
+                };
+            },
+        });
     },
 });

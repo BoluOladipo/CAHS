@@ -1,35 +1,38 @@
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 
-let prismaInstance: PrismaClient | null = null;
+let prismaInstance: any = null;
+let prismaLoadFailed = false;
 
-function getPrisma(): PrismaClient {
+async function getPrisma(): Promise<any> {
   if (prismaInstance) return prismaInstance;
+  if (prismaLoadFailed) return null;
   try {
-    prismaInstance = new PrismaClient();
+    const mod = await import("@prisma/client");
+    prismaInstance = new mod.PrismaClient();
     return prismaInstance;
   } catch (err) {
-    console.warn("[prisma] Could not initialize PrismaClient:", (err as Error).message);
-    return new Proxy({} as PrismaClient, {
-      get(_target, prop) {
-        return new Proxy({}, {
-          get(_subTarget, subProp) {
-            return async () => {
-              throw new Error(`Database offline: Prisma unavailable for ${String(prop)}.${String(subProp)}`);
-            };
-          },
-        });
-      },
-    });
+    prismaLoadFailed = true;
+    console.warn("[prisma] Could not load PrismaClient:", (err as Error).message);
+    return null;
   }
 }
 
 export const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop) {
-    const client = getPrisma();
-    const val = (client as any)[prop];
-    if (typeof val === "function") {
-      return val.bind(client);
-    }
-    return val;
+  get(_target, modelName) {
+    return new Proxy({}, {
+      get(_subTarget, methodName) {
+        return async (...args: any[]) => {
+          const client = await getPrisma();
+          if (!client) {
+            throw new Error(`Database offline: Prisma unavailable for ${String(modelName)}.${String(methodName)}`);
+          }
+          const model = client[modelName];
+          if (!model || typeof model[methodName] !== "function") {
+            throw new Error(`Prisma model or method not found: ${String(modelName)}.${String(methodName)}`);
+          }
+          return model[methodName](...args);
+        };
+      },
+    });
   },
 });
