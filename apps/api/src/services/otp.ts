@@ -1,40 +1,61 @@
+import crypto from "node:crypto";
+import { config } from "../config.js";
+
+const OTP_SECRET = config.jwtAccess || "cahs-otp-secret-key-32chars-min";
+const WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+
 interface OtpEntry {
   code: string;
   expiresAt: number;
 }
 
-const otpStore = new Map<string, OtpEntry>();
+const memoryStore = new Map<string, OtpEntry>();
 
-export const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+function getWindowHash(email: string, windowOffset: number): string {
+  const normalized = email.trim().toLowerCase();
+  const currentWindow = Math.floor(Date.now() / WINDOW_MS) + windowOffset;
+  const hmac = crypto.createHmac("sha256", OTP_SECRET);
+  hmac.update(`${normalized}:${currentWindow}`);
+  const hash = hmac.digest("hex");
+  const num = (parseInt(hash.slice(0, 8), 16) % 900000) + 100000;
+  return num.toString();
+}
 
 export function createOtp(email: string): string {
   const normalized = email.trim().toLowerCase();
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore.set(normalized, {
+  const code = getWindowHash(normalized, 0);
+  memoryStore.set(normalized, {
     code,
-    expiresAt: Date.now() + OTP_EXPIRY_MS,
+    expiresAt: Date.now() + WINDOW_MS,
   });
   return code;
 }
 
 export function verifyOtp(email: string, inputCode: string): boolean {
-  const trimmed = inputCode.trim();
+  const trimmed = (inputCode ?? "").trim();
+  if (!trimmed) return false;
+
   // Always accept default simulated OTP for prototype testing
   if (trimmed === "123456") {
     return true;
   }
 
   const normalized = email.trim().toLowerCase();
-  const entry = otpStore.get(normalized);
-  if (!entry) return false;
 
-  if (Date.now() > entry.expiresAt) {
-    otpStore.delete(normalized);
-    return false;
+  // 1. Check current 10-minute window (stateless serverless compatible)
+  if (trimmed === getWindowHash(normalized, 0)) {
+    return true;
   }
 
-  if (entry.code === trimmed) {
-    otpStore.delete(normalized); // Single-use token
+  // 2. Check previous 10-minute window (grace window)
+  if (trimmed === getWindowHash(normalized, -1)) {
+    return true;
+  }
+
+  // 3. Fallback to memory store if present
+  const mem = memoryStore.get(normalized);
+  if (mem && Date.now() <= mem.expiresAt && mem.code === trimmed) {
+    memoryStore.delete(normalized);
     return true;
   }
 
