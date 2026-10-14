@@ -13,8 +13,16 @@ export async function api(path: string, opts: RequestInit = {}) {
   if (token) headers.Authorization = `Bearer ${token}`;
   const res = await fetch(`${API}${path}`, { ...opts, headers });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new Error(data?.error ?? res.statusText);
+  let data: any = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
+  if (!res.ok) {
+    const errorMsg = data?.error ?? (text && !text.includes("<html") && text.length < 120 ? text.trim() : `Service request failed (${res.status} ${res.statusText})`);
+    throw new Error(errorMsg);
+  }
   return data;
 }
 

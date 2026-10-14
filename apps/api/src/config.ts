@@ -6,6 +6,10 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(here, "../../../.env") });
 dotenv.config({ path: path.resolve(here, "../.env") });
 
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/cahs?schema=public";
+}
+
 export const config = {
   port: Number(process.env.PORT ?? 4000),
   webOrigin: process.env.WEB_ORIGIN ?? "http://localhost:5173",

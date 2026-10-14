@@ -1,3 +1,4 @@
+import express from "express";
 import fs from "node:fs";
 import { createApp } from "./app.js";
 import { config } from "./config.js";
@@ -9,11 +10,10 @@ try {
 }
 
 const app = createApp();
+const port = Number(process.env.PORT ?? config.port ?? 4000);
 
-if (!process.env.VERCEL) {
-  app.listen(config.port, () => {
-    console.log(`CAHS API listening on :${config.port} (Africa/Lagos). Prototype — simulated funds only.`);
-  });
-}
+app.listen(port, () => {
+  console.log(`CAHS API listening on :${port} (Africa/Lagos). Prototype — simulated funds only.`);
+});
 
 export default app;
