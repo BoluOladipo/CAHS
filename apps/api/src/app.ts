@@ -27,12 +27,12 @@ export function createApp() {
   const app = express();
   app.set("trust proxy", 1);
   app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(cors({ origin: config.webOrigin, credentials: true }));
+  app.use(cors({ origin: true, credentials: true }));
   app.use(express.json({ limit: "2mb" }));
   app.use(rateLimit({ windowMs: 60_000, max: 300 }));
   app.use("/uploads", express.static(config.uploadDir));
 
-  app.get("/api/health", (_req, res) => {
+  app.get(["/health", "/api/health"], (_req, res) => {
     res.json({ ok: true, service: "cahs-api", prototype: true });
   });
 

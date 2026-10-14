@@ -12,7 +12,7 @@ export const config = {
   jwtAccess: process.env.JWT_ACCESS_SECRET ?? "dev-access-secret-change-me-32chars",
   jwtRefresh: process.env.JWT_REFRESH_SECRET ?? "dev-refresh-secret-change-me-32chars",
   fieldKey: process.env.FIELD_ENCRYPTION_KEY ?? "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-  uploadDir: process.env.UPLOAD_DIR ?? path.resolve(here, "../uploads"),
+  uploadDir: process.env.UPLOAD_DIR ?? (process.env.VERCEL ? "/tmp/uploads" : path.resolve(here, "../uploads")),
   anthropicKey: process.env.ANTHROPIC_API_KEY ?? "",
   tz: process.env.TZ ?? "Africa/Lagos",
   smtp: {

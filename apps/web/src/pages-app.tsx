@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { api, naira } from "./api";
+import { api, naira, API } from "./api";
 import { useAuth } from "./auth";
 import { Card } from "./shell";
 import { calculatePlatformFee, applyLogisticsDiscount, SAVINGS_DISCLOSURES, LOAN_HISTORY_DISCLAIMER } from "@cahs/shared";
@@ -1311,7 +1311,7 @@ export function AdminAudit() {
   return (
     <div>
       <h1 className="font-display text-3xl">Audit log</h1>
-      <a className="text-sm text-leaf underline" href="http://localhost:4000/api/admin/audit.csv">
+      <a className="text-sm text-leaf underline" href={`${API}/api/admin/audit.csv`}>
         Export CSV
       </a>
       <ul className="mt-3 max-h-[480px] overflow-auto text-xs">
