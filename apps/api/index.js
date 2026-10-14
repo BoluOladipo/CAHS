@@ -1,6 +1,9 @@
 let cachedApp = null;
 
 export default async function handler(req, res) {
+  if (req.url === "/api/ping" || req.url === "/ping" || req.url?.endsWith("/ping")) {
+    return res.status(200).json({ ping: "pong from apps/api", ver: "1.0", url: req.url });
+  }
   try {
     if (!cachedApp) {
       const { createApp } = await import("./dist/app.js");

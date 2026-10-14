@@ -15,6 +15,9 @@ if (!process.env.VERCEL) {
     });
 }
 export default function handler(req, res) {
+    if (req.url === "/api/ping" || req.url === "/ping" || req.url?.endsWith("/ping")) {
+        return res.status(200).json({ ping: "pong from src/index.ts", ver: "1.0", url: req.url });
+    }
     try {
         return app(req, res);
     }
