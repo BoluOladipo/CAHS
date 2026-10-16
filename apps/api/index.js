@@ -49928,7 +49928,7 @@ var parse = (input, parseQueryString) => {
     return legacyParse(normalized2, parseQueryString, err);
   }
   const hostname = normalizeHostname(u.hostname, u.href);
-  const port = u.port || null;
+  const port2 = u.port || null;
   const pathname = u.pathname || null;
   const search = u.search || null;
   let auth = null;
@@ -49962,7 +49962,7 @@ var parse = (input, parseQueryString) => {
     protocol: u.protocol || null,
     host: u.host || null,
     hostname,
-    port,
+    port: port2,
     pathname,
     search,
     path: (pathname || "") + (search || "") || null,
@@ -64658,15 +64658,13 @@ try {
 } catch (err) {
 }
 var app = createApp();
-if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
-  const port = Number(process.env.PORT ?? config2.port ?? 4e3);
-  try {
-    app.listen(port, "0.0.0.0", () => {
-      console.log(`CAHS API listening on :${port} (Africa/Lagos). Prototype \u2014 simulated funds only.`);
-    });
-  } catch (err) {
-    console.warn("Server listen note:", err.message);
-  }
+var port = Number(process.env.PORT || config2.port || 4e3);
+try {
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`CAHS API server listening on 0.0.0.0:${port}`);
+  });
+} catch (err) {
+  console.warn("Server listen note:", err.message);
 }
 var src_default = app;
 export {
