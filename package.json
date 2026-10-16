@@ -13,7 +13,7 @@
     "dev": "npm run dev --workspaces --if-present",
     "dev:api": "npm run dev -w @cahs/api",
     "dev:web": "npm run dev -w @cahs/web",
-    "build": "npm run build -w @cahs/shared && npm run build -w @cahs/api && npm run build -w @cahs/web",
+    "build": "npm run build -w @cahs/shared && npm run build -w @cahs/api && npm run build -w @cahs/web && esbuild apps/api/src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=api/index.js",
     "test": "npm run test --workspaces --if-present",
     "db:generate": "npm run prisma:generate -w @cahs/api",
     "db:migrate": "npm run prisma:migrate -w @cahs/api",
@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.118.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

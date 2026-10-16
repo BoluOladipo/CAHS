@@ -10,3 +10,7 @@ coverage
 apps/api/prisma/*.db
 apps/api/prisma/*.db-journal
 *.tsbuildinfo
+scratch/
+.env*.local
+.env.local
+

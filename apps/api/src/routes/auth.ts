@@ -79,7 +79,7 @@ authRouter.post("/register", async (req, res) => {
 });
 
 authRouter.post("/request-otp", async (req, res) => {
-  const email = String(req.body.email ?? "").trim().toLowerCase();
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
   if (!email || !email.includes("@")) {
     return res.status(400).json({ error: "A valid email address is required" });
   }
@@ -104,9 +104,9 @@ authRouter.post("/request-otp", async (req, res) => {
 });
 
 authRouter.post("/login", async (req, res) => {
-  const email = String(req.body.email ?? "").toLowerCase().trim();
-  const password = String(req.body.password ?? "");
-  const otp = req.body.otp as string | undefined;
+  const email = String(req.body?.email ?? "").toLowerCase().trim();
+  const password = String(req.body?.password ?? "");
+  const otp = req.body?.otp as string | undefined;
 
   let user: any = null;
   try {
@@ -144,19 +144,23 @@ authRouter.post("/login", async (req, res) => {
 
   if (!user || user.deletedAt) return res.status(401).json({ error: "Invalid credentials" });
 
-  if (user.passwordHash) {
-    const ok = (password === "Demo1234!") || (await bcrypt.compare(password, user.passwordHash).catch(() => false));
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+  const hasValidOtp = otp ? verifyOtp(email, otp) : false;
+
+  if (otp && !hasValidOtp) {
+    return res.status(401).json({ error: "Invalid OTP. Use the code sent to your email or 123456." });
   }
 
+  // Admin and Bank Officer accounts require OTP
   if (user.role === "BANK_OFFICER" || user.role === "PLATFORM_ADMIN") {
-    if (otp && !verifyOtp(email, otp)) {
-      return res.status(401).json({ error: "Invalid OTP. Use the code sent to your email or 123456." });
+    if (!hasValidOtp) {
+      return res.status(401).json({ error: "Admin and Bank Officer accounts require OTP verification. Click 'Send code' or use 123456." });
     }
-  } else if (otp) {
-    if (!verifyOtp(email, otp)) {
-      return res.status(401).json({ error: "Invalid OTP. Use the code sent to your email or 123456." });
-    }
+  }
+
+  // If not authenticated via OTP, verify password
+  if (!hasValidOtp) {
+    const ok = password === "Demo1234!" || (user.passwordHash ? await bcrypt.compare(password, user.passwordHash).catch(() => false) : false);
+    if (!ok) return res.status(401).json({ error: "Invalid credentials. Check password or use OTP verification." });
   }
 
   const t = tokens({
