@@ -1,3 +1,4 @@
+import { createRequire } from 'module'; import { fileURLToPath as _fileURLToPath } from 'url'; import _path from 'path'; const require = createRequire(import.meta.url); const __filename = _fileURLToPath(import.meta.url); const __dirname = _path.dirname(__filename);
 var __create = Object.create;
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;

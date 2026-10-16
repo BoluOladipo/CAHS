@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "npm run build --prefix ../../packages/shared && prisma generate && tsc -p tsconfig.json && esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=index.js && esbuild src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/index.js",
+    "build": "npm run build --prefix ../../packages/shared && prisma generate && tsc -p tsconfig.json && node ../../scripts/bundle.js",
     "start": "node index.js",
     "test": "vitest run",
     "prisma:generate": "prisma generate",

@@ -13,7 +13,7 @@
     "dev": "npm run dev --workspaces --if-present",
     "dev:api": "npm run dev -w @cahs/api",
     "dev:web": "npm run dev -w @cahs/web",
-    "build": "npm run build -w @cahs/shared && npm run build -w @cahs/api && npm run build -w @cahs/web && esbuild apps/api/src/index.ts --bundle --platform=node --target=node20 --format=esm --outfile=api/index.js",
+    "build": "npm run build -w @cahs/shared && npm run build -w @cahs/api && npm run build -w @cahs/web && node scripts/bundle.js",
     "test": "npm run test --workspaces --if-present",
     "db:generate": "npm run prisma:generate -w @cahs/api",
     "db:migrate": "npm run prisma:migrate -w @cahs/api",
