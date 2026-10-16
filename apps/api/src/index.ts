@@ -10,8 +10,9 @@ try {
 
 const app = createApp();
 
-const port = Number(process.env.PORT ?? config.port ?? 4000);
-if (port && !process.env.VERCEL_SERVERLESS) {
+// Only listen locally during development; Vercel imports the app directly
+if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
+  const port = Number(process.env.PORT ?? config.port ?? 4000);
   try {
     app.listen(port, "0.0.0.0", () => {
       console.log(`CAHS API listening on :${port} (Africa/Lagos). Prototype — simulated funds only.`);
