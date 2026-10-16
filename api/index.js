@@ -50356,7 +50356,7 @@ function nmfetch(url, options) {
   let finished3 = false;
   let cookies;
   let body;
-  const handler = parsed.protocol === "https:" ? https : http;
+  const handler2 = parsed.protocol === "https:" ? https : http;
   const headers = {
     "accept-encoding": "gzip,deflate",
     "user-agent": "nodemailer/" + version
@@ -50440,7 +50440,7 @@ function nmfetch(url, options) {
     reqOptions.servername = parsed.hostname;
   }
   try {
-    req = handler.request(reqOptions);
+    req = handler2.request(reqOptions);
   } catch (E) {
     finished3 = true;
     setImmediate(() => {
@@ -58030,7 +58030,7 @@ var SMTPConnection = class extends EventEmitter2 {
       }
     }
     if (this.customAuth.has(this._authMethod)) {
-      const handler = this.customAuth.get(this._authMethod);
+      const handler2 = this.customAuth.get(this._authMethod);
       let lastResponse;
       let returned = false;
       const resolve3 = () => {
@@ -58083,7 +58083,7 @@ var SMTPConnection = class extends EventEmitter2 {
         setImmediate(() => this._sendCommand(cmd));
         return promise;
       };
-      const handlerResponse = handler({
+      const handlerResponse = handler2({
         auth: this._auth,
         method: this._authMethod,
         extensions: [].concat(this._supportedExtensions),
@@ -64703,9 +64703,46 @@ if (!process.env.VERCEL && process.env.NODE_ENV !== "production") {
   } catch (err) {
   }
 }
-var index_default = app;
+async function handler(req, res) {
+  const origin = req.headers?.origin || "*";
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  if (req.url === "/api/ping" || req.url === "/ping") {
+    return res.status(200).json({ ok: true, ping: "pong", time: (/* @__PURE__ */ new Date()).toISOString() });
+  }
+  return new Promise((resolve3) => {
+    res.on("finish", resolve3);
+    res.on("close", resolve3);
+    res.on("error", (err) => {
+      console.error("Response stream error:", err);
+      resolve3();
+    });
+    try {
+      app(req, res, (err) => {
+        if (err) {
+          console.error("Unhandled express route error:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ ok: false, error: err?.message || String(err) });
+          }
+        }
+        resolve3();
+      });
+    } catch (syncErr) {
+      console.error("Synchronous handler error:", syncErr);
+      if (!res.headersSent) {
+        res.status(500).json({ ok: false, error: syncErr?.message || String(syncErr) });
+      }
+      resolve3();
+    }
+  });
+}
 export {
-  index_default as default
+  handler as default
 };
 /*! Bundled license information:
 
